@@ -22,3 +22,22 @@ app.use('/api', itemRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+require("dotenv").config();
+const app = require("./app");
+
+const connectDB = require("./db/connect");
+
+let mongoURL = process.env.MONGO_URI;
+
+const start = async () => {
+  try {
+    await connectDB(mongoURL);
+    app.listen(PORT, () =>
+      console.log(`Server is listening on port ${PORT}...`)
+    );
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+start();
