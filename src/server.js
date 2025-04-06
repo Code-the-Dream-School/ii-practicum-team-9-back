@@ -1,42 +1,30 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import itemRoutes from './routes/itemRoutes.js'; // Ensure .js extension for ES modules
+const express = require('express');
+const dotenv = require('dotenv');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const itemRoutes = require('./routes/itemRoutes.js');
+const connectDB = require('./db/connect');
 
 dotenv.config();
 
-const app = express();
+const app = require("./app.js");
 app.use(cors());
 app.use(express.json());
 
 // MongoDB connection
-const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/barterDB';
-
-mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("MongoDB connected successfully!"))
-  .catch((err) => console.error("MongoDB connection error:", err));
-
-// Use item routes
-app.use('/api', itemRoutes);
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-require("dotenv").config();
-const app = require("./app");
-
-const connectDB = require("./db/connect");
-
-let mongoURL = process.env.MONGO_URI;
+const mongoURL = process.env.MONGO_URI || 'mongodb://localhost:27017/barterDB';
 
 const start = async () => {
   try {
     await connectDB(mongoURL);
-    app.listen(PORT, () =>
-      console.log(`Server is listening on port ${PORT}...`)
-    );
+    console.log("MongoDB connected successfully!");
+
+    app.use('/api', itemRoutes);
+
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}...`));
   } catch (error) {
-    console.log(error);
+    console.error("MongoDB connection error:", error);
   }
 };
 

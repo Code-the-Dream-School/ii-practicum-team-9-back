@@ -1,34 +1,40 @@
-import express from 'express';
-import Item from '../models/item.js';  
+const express = require('express');
+const Item = require('../models/item');  
 const router = express.Router();
 
-// GET all items
-router.get('/items', async (req, res) => {
-    try {
-        const items = await Item.find();
-        res.json(items);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-
-// POST a new item
-router.post('/items', async (req, res) => {
+// POST: Add a new item
+router.post('/add-item', async (req, res) => {
+  try {
     const { name, title, description, imageUrl } = req.body;
 
+    // Create a new item instance
     const newItem = new Item({
-        name,
-        title,
-        description,
-        imageUrl,
+      name,
+      title,
+      description,
+      imageUrl,
     });
 
-    try {
-        const savedItem = await newItem.save();
-        res.status(201).json(savedItem);
-    } catch (err) {
-        res.status(400).json({ message: err.message });
-    }
+    // Save the new item to the database
+    await newItem.save();
+
+    res.status(201).json({ message: 'Item added successfully', item: newItem });
+  } catch (error) {
+    console.error('Error adding item:', error);
+    res.status(500).json({ message: 'Error adding item' });
+  }
 });
 
-export default router;  // <-- Use ES module export
+// GET: Fetch all items
+router.get('/items', async (req, res) => {
+  try {
+    // Get all items from the database
+    const items = await Item.find();
+    res.status(200).json(items);
+  } catch (error) {
+    console.error('Error fetching items:', error);
+    res.status(500).json({ message: 'Error fetching items' });
+  }
+});
+
+module.exports = router;
