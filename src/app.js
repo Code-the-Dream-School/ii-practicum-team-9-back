@@ -3,6 +3,16 @@ const app = express();
 const cors = require("cors");
 const favicon = require("express-favicon");
 const logger = require("morgan");
+const {createServer} =require('node:http');
+const {Server} = require("socket.io");
+
+const socket =createServer(app);
+const io = new Server(socket,{
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
+});
 
 const authenticateUser = require("./middleware/authentication");
 
@@ -20,7 +30,25 @@ app.use(favicon(__dirname + "/public/favicon.ico"));
 
 app.use("/api/v1", mainRouter);
 app.use("/auth", authRouter);
+io.on("connection", (socket) => {
 
+  console.log("a user connected");
+  socket.on("register", (data) => {
+    console.log("Socket Id", socket.id);
+    console.log(data);
+  });
+
+  socket.on("chat-message", (data) => {
+    console.log(data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
+  });
+
+  
+});
 //app.use("/products", authenticateUser, productsRouter);
 
-module.exports = app;
+module.exports = socket;
+//module.exports = app;

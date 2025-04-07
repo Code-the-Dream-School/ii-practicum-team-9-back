@@ -1,7 +1,7 @@
 require("dotenv").config();
 const { PORT = 8000 } = process.env;
+//const app = require("./app");
 const app = require("./app");
-
 const connectDB = require("./db/connect");
 
 let mongoURL = process.env.MONGO_URI;
