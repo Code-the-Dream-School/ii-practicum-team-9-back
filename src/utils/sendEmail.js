@@ -19,10 +19,12 @@ async function emailOTP(email, OTP) {
     html: `<b>Your one time passcode is: ${OTP}. This code with expire in 10 minutes.</b>`,
   };
 
-  transporter.sendMail(message, (error, result) => {
-    if (error) console.error(error);
-    return console.log(result);
-  });
+  try {
+    const info = await transporter.sendMail(message);
+    console.log(`message ${info.messageId} send status: ${info.response}`);
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 module.exports = emailOTP;

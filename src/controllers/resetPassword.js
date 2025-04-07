@@ -32,13 +32,11 @@ const findUserByEmail = async (req, res) => {
 
   setTimeout(() => {
     globalThis.newOTP = null;
-    console.log("OTP expired");
   }, 600000);
 
   res.status(StatusCodes.OK).json({
     user: { name: user.name },
     id: { _id: user.id },
-    newOTP,
   });
 };
 
