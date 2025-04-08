@@ -1,4 +1,5 @@
 const express = require("express");
+require("express-async-errors");
 const app = express();
 const cors = require("cors");
 const favicon = require("express-favicon");
@@ -18,6 +19,9 @@ const authenticateUser = require("./middleware/authentication");
 
 const mainRouter = require("./routes/mainRouter.js");
 const authRouter = require("./routes/authenticate");
+const resetPasswordRouter = require("./routes/resetPassword");
+
+const errorHandlerMiddleware = require("./middleware/error-handler");
 
 app.use(cors());
 app.use(express.json());
@@ -30,8 +34,10 @@ app.use(favicon(__dirname + "/public/favicon.ico"));
 
 app.use("/api/v1", mainRouter);
 app.use("/auth", authRouter);
-io.on("connection", (socket) => {
+app.use("/reset", resetPasswordRouter);
 
+app.use(errorHandlerMiddleware);
+io.on("connection", (socket) => {
   console.log("a user connected");
   socket.on("register", (data) => {
     console.log("Socket Id", socket.id);

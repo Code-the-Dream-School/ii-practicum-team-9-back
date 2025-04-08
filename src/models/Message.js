@@ -4,23 +4,25 @@ const jwt = require("jsonwebtoken");
 
 const MessageSchema = new mongoose.Schema({
   message_from: {
-    type: String,
-    required: [true, "Please provide a message_from"],
-    minlength: 3,
-    maxlength: 50,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
   },
   message_to: {
-    type: String,
-    required: [true, "Please provide a message_to"],
-    minlength: 3,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
   },
   content: {
     type: String,
-    required: [true, "Please provide a content"],
-    minlength: 3,
-    maxlength: 50,
+    required: true,
+    minlength: 2,
+    maxlength: 500,
   },  
-  
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 module.exports = mongoose.model("Message", MessageSchema);
