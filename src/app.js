@@ -8,6 +8,7 @@ const authenticateUser = require("./middleware/authentication");
 
 const mainRouter = require("./routes/mainRouter.js");
 const authRouter = require("./routes/authenticate");
+const itemRoutes = require("./routes/itemRoutes.js");
 
 app.use(cors());
 app.use(express.json());
@@ -20,6 +21,7 @@ app.use(favicon(__dirname + "/public/favicon.ico"));
 
 app.use("/api/v1", mainRouter);
 app.use("/auth", authRouter);
+app.use("/api/items", itemRoutes);
 
 //app.use("/products", authenticateUser, productsRouter);
 
