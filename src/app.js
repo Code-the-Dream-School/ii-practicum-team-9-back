@@ -9,6 +9,11 @@ const authenticateUser = require("./middleware/authentication");
 const mainRouter = require("./routes/mainRouter.js");
 const authRouter = require("./routes/authenticate");
 const itemRoutes = require("./routes/itemRoutes.js");
+const resetPasswordRouter = require("./routes/resetPassword");
+const itemRoutes = require("./routes/itemRoutes.js");
+
+const errorHandlerMiddleware = require("./middleware/error-handler");
+ 
 
 app.use(cors());
 app.use(express.json());
