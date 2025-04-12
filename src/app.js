@@ -12,7 +12,6 @@ const authRouter = require("./routes/authenticate");
 const resetPasswordRouter = require("./routes/resetPassword");
 
 const errorHandlerMiddleware = require("./middleware/error-handler");
-const itemRoutes = require("./routes/itemRoutes.js");
 const resetPasswordRouter = require("./routes/resetPassword");
 const itemRoutes = require("./routes/itemRoutes.js");
 
