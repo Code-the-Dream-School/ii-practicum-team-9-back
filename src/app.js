@@ -6,6 +6,7 @@ const favicon = require("express-favicon");
 const logger = require("morgan");
 const {createServer} =require('node:http');
 const {Server} = require("socket.io");
+const  Message = require("./models/Message");
 
 const socket =createServer(app);
 const io = new Server(socket,{
@@ -44,8 +45,13 @@ io.on("connection", (socket) => {
     console.log(data);
   });
 
-  socket.on("chat-message", (data) => {
+  socket.on("send-message", async (data) => {
+    const { from:message_from, to:message_to, message:content } = data;
     console.log(data);
+    console.log(message_from, message_to, content);
+    const message = new Message({ message_from, message_to, content });
+    await message.save();
+    socket.emit("receive-message", message);
   });
 
   socket.on("disconnect", () => {
