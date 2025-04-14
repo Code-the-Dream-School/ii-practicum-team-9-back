@@ -23,7 +23,7 @@ const UserSchema = new mongoose.Schema({
     required: [true, "Please provide a password"],
     minlength: 6,
   },
-  imageUrl: {
+  userProfilePhotoURL: {
     type: String,
     required: false,
   },

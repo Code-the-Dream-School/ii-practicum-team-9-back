@@ -7,6 +7,7 @@ const emailOTP = require("../utils/sendEmail");
 const findUserByEmail = async (req, res) => {
   const { email: email } = req.body;
   const user = await User.findOne({ email });
+  const OTPexpirationTime = 60000 * 10;
 
   if (!user) {
     throw new NotFoundError(`User not found`);
@@ -16,12 +17,16 @@ const findUserByEmail = async (req, res) => {
   if (!otp) {
     otp = await OTP.create({ assignedTo: user._id });
   }
-  const newOTP = otp.generateOTP();
-  otp.updatedAt = Date.now();
-  otp.expireAt = otp.updatedAt.getTime() + 60000 * 10;
-  otp.save();
 
-  emailOTP(user.email, newOTP);
+  try {
+    const newOTP = otp.generateOTP();
+    otp.updatedAt = Date.now();
+    otp.expireAt = otp.updatedAt.getTime() + OTPexpirationTime;
+    await otp.save();
+    emailOTP(user.email, newOTP);
+  } catch (error) {
+    return error;
+  }
 
   res.status(StatusCodes.OK).json({
     user: { name: user.name },
@@ -47,20 +52,23 @@ const validateOTP = async (req, res) => {
     id: { userId: otpUser.assignedTo },
     message: "Code validated",
   });
+
+  otpUser.OTPcode = null;
+  otpUser.save();
 };
 
 const resetPassword = async (req, res) => {
   const { password: newPassword, id: id } = req.body;
   const user = await User.findOne({ _id: id });
 
-  if (!user) {
-    throw new NotFoundError(`User not found`);
-  }
   if (!newPassword) {
     throw new BadRequestError("Please provide a new password");
   }
   if (newPassword.length < 6) {
     throw new BadRequestError("Password must be at least 6 characters long");
+  }
+  if (!user) {
+    throw new NotFoundError(`User not found`);
   }
 
   user.password = newPassword;
