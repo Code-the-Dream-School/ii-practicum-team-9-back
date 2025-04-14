@@ -23,6 +23,7 @@ const authRouter = require("./routes/authenticate");
 const resetPasswordRouter = require("./routes/resetPassword");
 
 const errorHandlerMiddleware = require("./middleware/error-handler");
+const itemRoutes = require("./routes/itemRoutes.js");
 
 app.use(cors());
 app.use(express.json());
@@ -38,17 +39,12 @@ app.use("/auth", authRouter);
 app.use("/reset", resetPasswordRouter);
 
 app.use(errorHandlerMiddleware);
-io.on("connection", (socket) => {
-  console.log("a user connected");
+io.on("connection", (socket) => {  
   socket.on("register", (data) => {
-    console.log("Socket Id", socket.id);
-    console.log(data);
   });
 
   socket.on("send-message", async (data) => {
     const { from:message_from, to:message_to, message:content } = data;
-    console.log(data);
-    console.log(message_from, message_to, content);
     const message = new Message({ message_from, message_to, content });
     await message.save();
     socket.emit("receive-message", message);
