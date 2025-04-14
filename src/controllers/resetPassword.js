@@ -54,7 +54,7 @@ const validateOTP = async (req, res) => {
   });
 
   otpUser.OTPcode = null;
-  otpUser.save();
+  await otpUser.save();
 };
 
 const resetPassword = async (req, res) => {
@@ -72,7 +72,7 @@ const resetPassword = async (req, res) => {
   }
 
   user.password = newPassword;
-  user.save();
+  await user.save();
 
   res.status(StatusCodes.OK).json({
     user: { name: user.name },
