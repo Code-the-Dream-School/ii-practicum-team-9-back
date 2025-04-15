@@ -40,9 +40,6 @@ app.use("/reset", resetPasswordRouter);
 
 app.use(errorHandlerMiddleware);
 io.on("connection", (socket) => {  
-  socket.on("register", (data) => {
-  });
-
   socket.on("send-message", async (data) => {
     const { from:message_from, to:message_to, message:content } = data;
     const message = new Message({ message_from, message_to, content });
