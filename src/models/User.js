@@ -23,6 +23,10 @@ const UserSchema = new mongoose.Schema({
     required: [true, "Please provide a password"],
     minlength: 6,
   },
+  userProfilePhotoURL: {
+    type: String,
+    required: false,
+  },
 });
 
 UserSchema.pre("save", async function (next) {
@@ -32,7 +36,7 @@ UserSchema.pre("save", async function (next) {
       this.password = await bcrypt.hash(this.password, salt);
       next();
     } catch (error) {
-      next(error);
+      return next(error);
     }
   }
 });
