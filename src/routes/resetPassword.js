@@ -6,8 +6,8 @@ const {
   resetPassword,
 } = require("../controllers/resetPassword");
 
-router.get("/", findUserByEmail);
-router.get("/validateCode", validateOTP);
-router.patch("/:id", resetPassword);
+router.post("/", findUserByEmail);
+router.post("/validateCode/", validateOTP);
+router.patch("/", resetPassword);
 
 module.exports = router;
