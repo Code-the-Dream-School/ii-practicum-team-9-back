@@ -26,10 +26,9 @@ app.use(favicon(__dirname + "/public/favicon.ico"));
 app.use("/api/v1", mainRouter);
 app.use("/auth", authRouter);
 app.use("/reset", resetPasswordRouter);
-
-app.use(errorHandlerMiddleware);
 app.use("/api/items", itemRoutes);
 
-//app.use("/products", authenticateUser, productsRouter);
+app.use(errorHandlerMiddleware);
+//app.use("/api/items", authenticateUser, itemRoutes);
 
 module.exports = app;
