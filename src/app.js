@@ -4,6 +4,17 @@ const app = express();
 const cors = require("cors");
 const favicon = require("express-favicon");
 const logger = require("morgan");
+const {createServer} =require('node:http');
+const {Server} = require("socket.io");
+const  Message = require("./models/Message");
+
+const socket =createServer(app);
+const io = new Server(socket,{
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
+});
 
 const authenticateUser = require("./middleware/authentication");
 
@@ -28,8 +39,21 @@ app.use("/auth", authRouter);
 app.use("/reset", resetPasswordRouter);
 
 app.use(errorHandlerMiddleware);
-app.use("/api/items", itemRoutes);
+io.on("connection", (socket) => {  
+  socket.on("send-message", async (data) => {
+    const { from:message_from, to:message_to, message:content } = data;
+    const message = new Message({ message_from, message_to, content });
+    await message.save();
+    socket.emit("receive-message", message);
+  });
 
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
+  });
+
+  
+});
 //app.use("/products", authenticateUser, productsRouter);
 
-module.exports = app;
+module.exports = socket;
+//module.exports = app;
