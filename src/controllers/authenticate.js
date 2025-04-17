@@ -27,6 +27,7 @@ const register = async (req, res) => {
 
   }
   catch(error){
+    console.log(error);
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(createResponse("error",error.message));
   }
 };
@@ -55,6 +56,7 @@ const login = async (req, res) => {
       { name:user.name,id:user.id, token }));    
   }
   catch(error){
+    console.log(error);
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(createResponse("error",error.message));
   }
 };
