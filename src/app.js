@@ -4,20 +4,21 @@ const app = express();
 const cors = require("cors");
 const favicon = require("express-favicon");
 const logger = require("morgan");
+const uploadProfilePhoto = require("./routes/uploadProfilePhoto");
+ 
 
 const authenticateUser = require("./middleware/authentication");
 
 const mainRouter = require("./routes/mainRouter.js");
 const authRouter = require("./routes/authenticate");
 const resetPasswordRouter = require("./routes/resetPassword");
-
-const errorHandlerMiddleware = require("./middleware/error-handler");
-const resetPasswordRouter = require("./routes/resetPassword");
 const itemRoutes = require("./routes/itemRoutes.js");
+ 
 
 const errorHandlerMiddleware = require("./middleware/error-handler");
  
 
+app.use("/api/users", uploadProfilePhoto);
 app.use(cors());
 app.use(express.json());
 
