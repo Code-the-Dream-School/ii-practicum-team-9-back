@@ -17,3 +17,5 @@ node_modules/
 .env.local
 # other
 .DS_Store
+
+src/ii-practicum-team-9-back.code-workspace
