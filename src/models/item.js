@@ -28,6 +28,10 @@ const ItemSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    closed: {
+      type: Boolean,
+      default: false,
+    },
     assignedTo: {
       type: mongoose.Types.ObjectId,
       ref: "User",

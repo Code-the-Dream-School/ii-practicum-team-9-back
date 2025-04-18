@@ -18,11 +18,6 @@ const addItem = async (req, res) => {
         .status(StatusCodes.NOT_FOUND)
         .json(createResponse("error", "User not found"));
     }
-    if (req.user.role !== "admin" || req.user.userId !== assignedTo) {
-      return res
-        .status(StatusCodes.UNAUTHORIZED)
-        .json(createResponse("error", "User is not authorized"));
-    }
 
     const newItem = new Item({
       ...req.body,
@@ -45,27 +40,22 @@ const addItem = async (req, res) => {
 
 const getItems = async (req, res) => {
   try {
-    // const { search } = req.query;
-    // const filter = search
-    //   ? {
-    //       $or: [
-    //         { title: { $regex: search, $options: "i" } },
-    //         { name: { $regex: search, $options: "i" } },
-    //       ],
-    //     }
-    //   : {};
+    const { search } = req.query;
 
-    // ONLY RETURN AVAILABLE ITEMS
+    const filter = search
+      ? {
+          $or: [
+            { title: { $regex: search, $options: "i" } },
+            { name: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
 
-    const { categoryFilter } = req.body;
-    const query = await Item.find({ category: categoryFilter });
+    const items = await Item.find(filter).populate("assignedTo", "name email");
 
-    //const items = await Item.find();
-    // const items = await Item.find(filter).populate("assignedTo", "name email");
-    //res.status(200).json(items);
     res.status(StatusCodes.OK).json(
       createResponse("success", "Items found", {
-        items: query,
+        items: items,
       })
     );
   } catch (error) {
@@ -94,7 +84,7 @@ const updateItem = async (req, res) => {
     }
 
     if (
-      item.assignedTo.toString() !== req.user.userId ||
+      item.assignedTo.toString() !== req.user.userId &&
       req.user.role !== "admin"
     ) {
       return res
@@ -113,7 +103,6 @@ const updateItem = async (req, res) => {
     );
   } catch (error) {
     console.error("Error updating item:", error);
-    res.status(500).json({ message: "Error updating item" });
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json(createResponse("error", error.message));
@@ -124,7 +113,7 @@ const deleteItem = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const item = await Item.findOneAndDelete({ _id: id });
+    const item = await Item.findOne({ _id: id });
 
     if (!item) {
       return res
@@ -133,7 +122,7 @@ const deleteItem = async (req, res) => {
     }
 
     if (
-      item.assignedTo.toString() !== req.user.userId ||
+      item.assignedTo.toString() !== req.user.userId &&
       req.user.role !== "admin"
     ) {
       return res
@@ -142,6 +131,8 @@ const deleteItem = async (req, res) => {
           createResponse("error", "User is not authorized to delete this item")
         );
     }
+
+    await Item.deleteOne({ _id: item._id });
 
     res.status(StatusCodes.OK).json(
       createResponse("success", "Item deleted successfully", {
