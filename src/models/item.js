@@ -1,4 +1,3 @@
-// models/Item.js
 const mongoose = require("mongoose");
 
 const ItemSchema = new mongoose.Schema(
@@ -19,18 +18,19 @@ const ItemSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
-    createdBy: {
-      type: mongoose.Types.ObjectId,
-      ref: "User",
-      required: [true, "Please provide a user"],
+    category: {
+      type: String,
+      enum: ["item", "service", "lesson"],
+      default: "item",
+      required: [true, "Please select a category"],
+    },
+    available: {
+      type: Boolean,
+      default: true,
     },
     assignedTo: {
       type: mongoose.Types.ObjectId,
       ref: "User",
-      required: false,
-    },
-    lastSwapDate: {
-      type: Date,
       required: false,
     },
   },
