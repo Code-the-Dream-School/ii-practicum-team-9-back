@@ -23,9 +23,26 @@ const UserSchema = new mongoose.Schema({
     required: [true, "Please provide a password"],
     minlength: 6,
   },
-  userProfilePhotoURL: {
+  role: {
     type: String,
-    required: false,
+    enum: ["user", "admin"],
+    default: "user",
+  },
+  location: {
+    type: String,
+    default: "",
+  },
+  profilePhoto: {
+    type: String,
+    default: "",
+  },
+  interests: {
+    type: [String],
+    default: [],
+  },
+  tags: {
+    type: [String],
+    default: [],
   },
 });
 

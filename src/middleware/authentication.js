@@ -5,7 +5,7 @@ const { UnauthenticatedError } = require("../errors");
 const auth = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer")) {
-    throw new UnauthenticatedError("Authentiation invalid");
+    throw new UnauthenticatedError("Authentication not valid");
   }
   const token = authHeader.split(" ")[1];
   try {
@@ -13,7 +13,7 @@ const auth = async (req, res, next) => {
     req.user = { userId: payload.userId, name: payload.name };
     next();
   } catch (error) {
-    throw new UnauthenticatedError("Authentication invalid");
+    throw new UnauthenticatedError("Authentication not valid");
   }
 };
 
