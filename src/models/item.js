@@ -24,15 +24,13 @@ const ItemSchema = new mongoose.Schema(
       default: "item",
       required: [true, "Please select a category"],
     },
-    available: {
-      type: Boolean,
-      default: true,
+    itemStatus: {
+      type: String,
+      enum: ["available", "pending", "closed"],
+      default: "available",
+      required: [true, "Please select a status"],
     },
-    closed: {
-      type: Boolean,
-      default: false,
-    },
-    assignedTo: {
+    owner: {
       type: mongoose.Types.ObjectId,
       ref: "User",
       required: false,

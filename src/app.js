@@ -37,8 +37,8 @@ app.use(favicon(__dirname + "/public/favicon.ico"));
 app.use("/api/v1", mainRouter);
 app.use("/auth", authRouter);
 app.use("/reset", resetPasswordRouter);
-app.use("/api/items", authenticateUser, itemRoutes);
-app.use("/api/barter/", authenticateUser, barterRouter);
+app.use("/api/v1/items", authenticateUser, itemRoutes);
+app.use("/api/v1/barter", authenticateUser, barterRouter);
 
 app.use(errorHandlerMiddleware);
 

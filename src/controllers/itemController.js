@@ -22,7 +22,7 @@ const addItem = async (req, res) => {
     const newItem = new Item({
       ...req.body,
     });
-    newItem.assignedTo = user._id;
+    newItem.owner = user._id;
     await newItem.save();
 
     res.status(StatusCodes.CREATED).json(
@@ -51,7 +51,7 @@ const getItems = async (req, res) => {
         }
       : {};
 
-    const items = await Item.find(filter).populate("assignedTo", "name email");
+    const items = await Item.find(filter).populate("owner", "name email");
 
     res.status(StatusCodes.OK).json(
       createResponse("success", "Items found", {
@@ -84,7 +84,7 @@ const updateItem = async (req, res) => {
     }
 
     if (
-      item.assignedTo.toString() !== req.user.userId &&
+      item.owner.toString() !== req.user.userId &&
       req.user.role !== "admin"
     ) {
       return res
@@ -122,7 +122,7 @@ const deleteItem = async (req, res) => {
     }
 
     if (
-      item.assignedTo.toString() !== req.user.userId &&
+      item.owner.toString() !== req.user.userId &&
       req.user.role !== "admin"
     ) {
       return res

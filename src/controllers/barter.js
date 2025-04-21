@@ -11,30 +11,28 @@ const createResponse = (status, message, data = []) => ({
 
 const newBarter = async (req, res) => {
   try {
-    const { item1, user1, item2, user2 } = req.body;
+    const { offeredItem, initiator, requestedItem, recipient } = req.body;
 
-    const itemOne = await Item.findOne({ _id: item1 });
-    const itemTwo = await Item.findOne({ _id: item2 });
-    const userOne = await User.findOne({ _id: user1 });
-    const userTwo = await User.findOne({ _id: user2 });
+    const offeredItemSearch = await Item.findOne({ _id: offeredItem });
+    const requestedItemSearch = await Item.findOne({ _id: requestedItem });
+    const initiatorSearch = await User.findOne({ _id: initiator });
+    const recipientSearch = await User.findOne({ _id: recipient });
 
-    if (!itemOne || !itemTwo) {
+    if (!offeredItemSearch || !requestedItemSearch) {
       return res
         .status(StatusCodes.NOT_FOUND)
         .json(createResponse("error", "Item not found"));
     }
 
-    if (!userOne || !userTwo) {
+    if (!initiatorSearch || !recipientSearch) {
       return res
         .status(StatusCodes.NOT_FOUND)
         .json(createResponse("error", "User not found"));
     }
 
     if (
-      itemOne.available != true ||
-      itemTwo.available != true ||
-      itemOne.closed != false ||
-      itemTwo.closed != false
+      offeredItemSearch.itemStatus !== "available" ||
+      requestedItemSearch.itemStatus !== "available"
     ) {
       return res
         .status(StatusCodes.BAD_REQUEST)
@@ -42,8 +40,10 @@ const newBarter = async (req, res) => {
     }
 
     if (
-      (userOne._id.toString() !== itemOne.assignedTo.toString() ||
-        userTwo._id.toString() !== itemTwo.assignedTo.toString()) &&
+      (initiatorSearch._id.toString() !==
+        offeredItemSearch.owner.toString() ||
+        recipientSearch._id.toString() !==
+          requestedItemSearch.owner.toString()) &&
       req.user.role !== "admin"
     ) {
       return res
@@ -54,8 +54,8 @@ const newBarter = async (req, res) => {
     }
 
     if (
-      (req.user.userId !== userOne._id.toString() ||
-        req.user.userId !== userTwo._id.toString()) &&
+      (req.user.userId !== initiatorSearch._id.toString() ||
+        req.user.userId !== recipientSearch._id.toString()) &&
       req.user.role !== "admin"
     ) {
       return res
@@ -72,23 +72,23 @@ const newBarter = async (req, res) => {
       ...req.body,
     });
     newBarter.status = "offerMade";
-    itemOne.available = false;
-    itemTwo.available = false;
+    offeredItemSearch.itemStatus = "pending";
+    requestedItemSearch.itemStatus = "pending";
 
     await newBarter.save();
-    await itemOne.save();
-    await itemTwo.save();
+    await offeredItemSearch.save();
+    await requestedItemSearch.save();
 
     res.status(StatusCodes.OK).json(
       createResponse("success", "Barter has been initiated", {
         barter: newBarter,
         items: {
-          item1: itemOne.name,
-          item2: itemTwo.name,
+          offeredItem: offeredItemSearch.name,
+          requestedItem: requestedItemSearch.name,
         },
         users: {
-          user1: userOne.name,
-          user2: userTwo.name,
+          initiator: initiatorSearch.name,
+          recipient: recipientSearch.name,
         },
       })
     );
@@ -117,12 +117,12 @@ const barterAcceptOrDeny = async (req, res) => {
         .json(createResponse("error", "Barter not found"));
     }
 
-    const itemOne = await Item.findOne({ _id: barter.item1 });
-    const itemTwo = await Item.findOne({ _id: barter.item2 });
+    const offeredItem = await Item.findOne({ _id: barter.offeredItem });
+    const requestedItem = await Item.findOne({ _id: barter.requestedItem });
 
     if (
-      (req.user.userId !== barter.user1.toString() ||
-        req.user.userId !== barter.user2.toString()) &&
+      (req.user.userId !== barter.initiator.toString() ||
+        req.user.userId !== barter.recipient.toString()) &&
       req.user.role !== "admin"
     ) {
       return res
@@ -135,15 +135,15 @@ const barterAcceptOrDeny = async (req, res) => {
     await barter.save();
 
     if (barter.status == "offerRejected") {
-      itemOne.available = true;
-      itemTwo.available = true;
-      await itemOne.save();
-      await itemTwo.save();
+      offeredItem.itemStatus = "available";
+      requestedItem.itemStatus = "available";
+      await offeredItem.save();
+      await requestedItem.save();
     } else if (barter.status == "offerAccepted") {
-      itemOne.closed = true;
-      itemTwo.closed = true;
-      await itemOne.save();
-      await itemTwo.save();
+      offeredItem.itemStatus = "closed";
+      requestedItem.itemStatus = "closed";
+      await offeredItem.save();
+      await requestedItem.save();
     }
 
     res.status(StatusCodes.OK).json(

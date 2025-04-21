@@ -2,25 +2,25 @@ const mongoose = require("mongoose");
 
 const BarterSchema = new mongoose.Schema(
   {
-    user1: {
+    initiator: {
       type: mongoose.Types.ObjectId,
       ref: "User",
-      required: false,
+      required: true,
     },
-    user2: {
+    recipient: {
       type: mongoose.Types.ObjectId,
       ref: "User",
-      required: false,
+      required: true,
     },
-    item1: {
+    offeredItem: {
       type: mongoose.Types.ObjectId,
       ref: "Item",
-      required: false,
+      required: true,
     },
-    item2: {
+    requestedItem: {
       type: mongoose.Types.ObjectId,
       ref: "Item",
-      required: false,
+      required: true,
     },
     status: {
       type: String,
