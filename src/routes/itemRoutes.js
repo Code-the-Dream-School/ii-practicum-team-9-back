@@ -8,14 +8,14 @@ const router = express.Router();
 
 router.post('/add-item', authenticateUser, async (req, res) => {
   try {
-    const { name, title, description, imageUrl, assignedTo } = req.body;
+    const { name, title, description, imageUrl } = req.body;
 
      
     if (req.user.role !== 'admin' && req.user.userId !== assignedTo) {
       return res.status(403).json({ message: 'You can only create items for yourself' });
     }
 
-    const user = await User.findById(assignedTo);
+    const user = await User.findById(req.user.userId);
     if (!user) {
       return res.status(400).json({ message: 'User not found' });
     }
@@ -25,7 +25,7 @@ router.post('/add-item', authenticateUser, async (req, res) => {
       title,
       description,
       imageUrl,
-      assignedTo,
+      user: req.user.userId,
     });
 
     await newItem.save();
@@ -51,7 +51,9 @@ router.get('/items', async (req, res) => {
         }
       : {};
 
-    const items = await Item.find(filter).populate('assignedTo', 'name email');
+    const items = await Item.find(filter)
+      .populate('user', 'name email location');
+
     res.status(200).json(items);
   } catch (error) {
     console.error('Error fetching items:', error);
@@ -114,5 +116,16 @@ router.delete('/delete-item/:id', authenticateUser, async (req, res) => {
     res.status(500).json({ message: 'Error deleting item' });
   }
 });
+
+router.get('/my-items', authenticateUser, async (req, res) => {
+  try {
+    const items = await Item.find({ user: req.user.userId });
+    res.status(200).json(items);
+  } catch (error) {
+    console.error('Error fetching user items:', error);
+    res.status(500).json({ message: 'Error fetching user items' });
+  }
+});
+
 
 module.exports = router;

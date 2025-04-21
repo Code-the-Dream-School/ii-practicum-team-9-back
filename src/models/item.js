@@ -18,10 +18,10 @@ const itemSchema = new mongoose.Schema({
     type: String,
     required: false,  
   },
-    assignedTo: {
-    type: mongoose.Types.ObjectId,
-    ref: "User",
-    required: [true, "Please provide a user"],
+    user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
 }, { timestamps: true });
 

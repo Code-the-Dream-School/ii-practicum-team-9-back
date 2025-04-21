@@ -25,26 +25,35 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'admin'], 
-    default: 'user',  
+    enum: ['user', 'admin'],
+    default: 'user',
   },
   location: {
     type: String,
     default: "",
   },
   profilePhoto: {
-    type: String,  
+    type: String,
     default: "",
   },
   interests: {
-    type: [String],  
+    type: [String],
     default: [],
   },
   tags: {
-    type: [String],  
+    type: [String],
     default: [],
   },
+  bio: {
+    type: String,
+    default: "",
+  },
+  userProfilePhotoURL: {
+    type: String,
+    required: false,
+  },
 });
+
 
 UserSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
@@ -53,7 +62,7 @@ UserSchema.pre("save", async function (next) {
       this.password = await bcrypt.hash(this.password, salt);
       next();
     } catch (error) {
-      next(error);
+      return next(error);
     }
   }
 });

@@ -9,8 +9,9 @@ const authenticateUser = require('../middleware/authentication');
 const authorizeAdmin = require('../middleware/authorizeAdmin');
 const upload = require('../middleware/upload'); 
 
-router.get('/profile', authenticateUser, getUserProfile);
 
+router.get('/profile', authenticateUser, getUserProfile);
+ 
 router.put('/profile', authenticateUser, updateUserProfile);
 
 router.get('/admin/users', authenticateUser, authorizeAdmin, getAllUsers);

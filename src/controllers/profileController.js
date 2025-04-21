@@ -1,10 +1,11 @@
 const User = require('../models/User');
 const cloudinary = require('cloudinary').v2;
 
+ 
 const getUserProfile = async (req, res) => {
   try {
-    const userId = req.user.userId;  
-    const user = await User.findById(userId).select('-password');  
+    const userId = req.user.userId;
+    const user = await User.findById(userId).select('-password');
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -17,21 +18,20 @@ const getUserProfile = async (req, res) => {
   }
 };
 
+
 const updateUserProfile = async (req, res) => {
   try {
-    const userId = req.user.userId;  
-    const { name, location, interests, profilePicture } = req.body;
+    const userId = req.user.userId;
+    const { name, location, interests, bio, profilePicture } = req.body;
 
-    let updatedData = { name, location, interests };
+    const updatedData = { name, location, interests, bio };
 
-    
+     
     if (profilePicture) {
-      
       const result = await cloudinary.uploader.upload(profilePicture, {
         folder: 'user_profile_pics',
       });
-
-      updatedData.profilePicture = result.secure_url;
+      updatedData.profilePhoto = result.secure_url;
     }
 
     const updatedUser = await User.findByIdAndUpdate(userId, updatedData, { new: true });
@@ -47,6 +47,7 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
+ 
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select('-password');
@@ -56,4 +57,9 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-module.exports = { getUserProfile, updateUserProfile };
+module.exports = {
+  getUserProfile,
+  updateUserProfile,
+  getAllUsers,
+};
+
