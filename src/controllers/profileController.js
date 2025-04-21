@@ -1,3 +1,4 @@
+const UserProfile = require('../models/UserProfile');
 const User = require('../models/User');
 const cloudinary = require('cloudinary').v2;
 
@@ -5,55 +6,72 @@ const cloudinary = require('cloudinary').v2;
 const getUserProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const user = await User.findById(userId).select('-password');
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    const profile = await UserProfile.findOne({ user: userId }).populate("user", "-password");
+
+    if (!profile) {
+      return res.status(404).json({ message: "User profile not found" });
     }
 
-    res.status(200).json(user);
+    res.status(200).json(profile);
   } catch (error) {
-    console.error('Error fetching user profile:', error);
-    res.status(500).json({ message: 'Error fetching user profile' });
+    console.error("Error fetching user profile:", error);
+    res.status(500).json({ message: "Error fetching user profile" });
   }
 };
 
-
+ 
 const updateUserProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { name, location, interests, bio, profilePicture } = req.body;
+    const {
+      location,
+      interests,
+      tags,
+      bio,
+      role,
+      profilePhoto,
+      userProfilePhotoURL
+    } = req.body;
 
-    const updatedData = { name, location, interests, bio };
+    const updatedFields = {
+      location,
+      interests,
+      tags,
+      bio,
+      role,
+      userProfilePhotoURL,
+    };
 
-     
-    if (profilePicture) {
-      const result = await cloudinary.uploader.upload(profilePicture, {
+   
+    if (profilePhoto) {
+      const result = await cloudinary.uploader.upload(profilePhoto, {
         folder: 'user_profile_pics',
       });
-      updatedData.profilePhoto = result.secure_url;
+      updatedFields.profilePhoto = result.secure_url;
     }
 
-    const updatedUser = await User.findByIdAndUpdate(userId, updatedData, { new: true });
+    const updatedProfile = await UserProfile.findOneAndUpdate(
+      { user: userId },
+      updatedFields,
+      { new: true, upsert: true }  
+    ).populate("user", "-password");
 
-    if (!updatedUser) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.status(200).json({ message: 'Profile updated successfully', user: updatedUser });
+    res.status(200).json({ message: "Profile updated", profile: updatedProfile });
   } catch (error) {
-    console.error('Error updating profile:', error);
-    res.status(500).json({ message: 'Error updating profile' });
+    console.error("Error updating profile:", error);
+    res.status(500).json({ message: "Error updating profile" });
   }
 };
 
  
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select('-password');
-    res.status(200).json(users);
+    const profiles = await UserProfile.find().populate("user", "-password");
+    res.status(200).json(profiles);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching users' });
+    console.error("Error fetching users:", error);
+    res.status(500).json({ message: "Error fetching users" });
   }
 };
 
@@ -62,4 +80,3 @@ module.exports = {
   updateUserProfile,
   getAllUsers,
 };
-
