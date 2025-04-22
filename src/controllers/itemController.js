@@ -71,11 +71,7 @@ const updateItem = async (req, res) => {
     const { id } = req.params;
     const { name, title, description, imageUrl, category } = req.body;
 
-    const item = await Item.findByIdAndUpdate(
-      { _id: id },
-      { ...req.body },
-      { new: true, runValidators: true }
-    );
+    const item = await Item.findOne({ _id: id });
 
     if (!item) {
       return res
@@ -94,11 +90,15 @@ const updateItem = async (req, res) => {
         );
     }
 
-    await item.save();
+    const updatedItem = await Item.findByIdAndUpdate(
+      { _id: item._id },
+      { ...req.body },
+      { new: true, runValidators: true }
+    );
 
     res.status(StatusCodes.OK).json(
       createResponse("success", "Item updated successfully", {
-        item: item,
+        item: updatedItem,
       })
     );
   } catch (error) {

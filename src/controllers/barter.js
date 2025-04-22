@@ -40,8 +40,7 @@ const newBarter = async (req, res) => {
     }
 
     if (
-      (initiatorSearch._id.toString() !==
-        offeredItemSearch.owner.toString() ||
+      (initiatorSearch._id.toString() !== offeredItemSearch.owner.toString() ||
         recipientSearch._id.toString() !==
           requestedItemSearch.owner.toString()) &&
       req.user.role !== "admin"
@@ -54,8 +53,8 @@ const newBarter = async (req, res) => {
     }
 
     if (
-      (req.user.userId !== initiatorSearch._id.toString() ||
-        req.user.userId !== recipientSearch._id.toString()) &&
+      req.user.userId !== initiatorSearch._id.toString() &&
+      req.user.userId !== recipientSearch._id.toString() &&
       req.user.role !== "admin"
     ) {
       return res
@@ -103,13 +102,9 @@ const newBarter = async (req, res) => {
 const barterAcceptOrDeny = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status: statusUpdate } = req.body;
 
-    const barter = await Barter.findByIdAndUpdate(
-      { _id: id },
-      { status: status },
-      { new: true, runValidators: true }
-    );
+    const barter = await Barter.findOne({ _id: id });
 
     if (!barter) {
       return res
@@ -117,12 +112,9 @@ const barterAcceptOrDeny = async (req, res) => {
         .json(createResponse("error", "Barter not found"));
     }
 
-    const offeredItem = await Item.findOne({ _id: barter.offeredItem });
-    const requestedItem = await Item.findOne({ _id: barter.requestedItem });
-
     if (
-      (req.user.userId !== barter.initiator.toString() ||
-        req.user.userId !== barter.recipient.toString()) &&
+      req.user.userId !== barter.initiator.toString() &&
+      req.user.userId !== barter.recipient.toString() &&
       req.user.role !== "admin"
     ) {
       return res
@@ -131,6 +123,10 @@ const barterAcceptOrDeny = async (req, res) => {
           createResponse("error", "User is not authorized to edit this barter")
         );
     }
+
+    barter.status = statusUpdate;
+    const offeredItem = await Item.findOne({ _id: barter.offeredItem });
+    const requestedItem = await Item.findOne({ _id: barter.requestedItem });
 
     await barter.save();
 
