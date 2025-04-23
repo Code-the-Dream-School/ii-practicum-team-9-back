@@ -5,14 +5,15 @@ const cors = require("cors");
 const favicon = require("express-favicon");
 const logger = require("morgan");
 const uploadProfilePhoto = require("./routes/uploadProfilePhoto");
-const profileRoutes = require('./routes/userRoutes');
+const userRoutes = require('./routes/userRoutes');
+
  
 const {createServer} =require('node:http');
 const {Server} = require("socket.io");
 const  Message = require("./models/Message");
 
-const socket =createServer(app);
-const io = new Server(socket,{
+const socket = createServer(app);
+const io = new Server(socket, {
   cors: {
     origin: "http://localhost:5173",
     methods: ["GET", "POST"],
@@ -24,6 +25,7 @@ const authenticateUser = require("./middleware/authentication");
 const mainRouter = require("./routes/mainRouter.js");
 const authRouter = require("./routes/authenticate");
 const resetPasswordRouter = require("./routes/resetPassword");
+const barterRouter = require("./routes/barter");
 const itemRoutes = require("./routes/itemRoutes.js");
  
 
@@ -44,14 +46,17 @@ app.use("/api/v1", mainRouter);
 app.use("/auth", authRouter);
 app.use("/reset", resetPasswordRouter);
 app.use("/api/users", uploadProfilePhoto);
-app.use('/api/profile', profileRoutes);
+app.use('/api/profile', userRoutes);
 app.use("/api/items", authenticateUser, itemRoutes);
 
+app.use("/api/v1/items", authenticateUser, itemRoutes);
+app.use("/api/v1/barter", authenticateUser, barterRouter);
 
 app.use(errorHandlerMiddleware);
-io.on("connection", (socket) => {  
+
+io.on("connection", (socket) => {
   socket.on("send-message", async (data) => {
-    const { from:message_from, to:message_to, message:content } = data;
+    const { from: message_from, to: message_to, message: content } = data;
     const message = new Message({ message_from, message_to, content });
     await message.save();
     socket.emit("receive-message", message);
@@ -60,10 +65,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("user disconnected");
   });
-
-  
 });
-//app.use("/products", authenticateUser, productsRouter);
 
 module.exports = socket;
 //module.exports = app;
