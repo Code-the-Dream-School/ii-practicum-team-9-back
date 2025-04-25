@@ -23,6 +23,7 @@ const authRouter = require("./routes/authenticate");
 const resetPasswordRouter = require("./routes/resetPassword");
 const itemRoutes = require("./routes/itemRoutes.js");
 const barterRouter = require("./routes/barter");
+
 const errorHandlerMiddleware = require("./middleware/error-handler");
 
 app.use(cors());
