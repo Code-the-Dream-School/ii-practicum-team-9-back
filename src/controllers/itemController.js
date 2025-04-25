@@ -1,5 +1,6 @@
 const Item = require("../models/item");
 const User = require("../models/User");
+const UserProfile = require("../models/UserProfile");
 const { StatusCodes } = require("http-status-codes");
 
 const createResponse = (status, message, data = []) => ({
@@ -10,7 +11,7 @@ const createResponse = (status, message, data = []) => ({
 
 const addItem = async (req, res) => {
   try {
-    const {title, description, imageUrl, category, status } = req.body;
+    const { title, description, imageUrl, category, status } = req.body;
 
     const user = await User.findById(req.user.userId);
     if (!user) {
@@ -19,10 +20,24 @@ const addItem = async (req, res) => {
         .json(createResponse("error", "User not found"));
     }
 
+    const userProfile = await UserProfile.findOne({ user: user._id });
+    if (!userProfile) {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json(createResponse("error", "User profile not found"));
+    }
+
     const newItem = new Item({
-      ...req.body,
+      title,
+      description,
+      imageUrl,
+      category,
+      status,
+      owner: user._id,
+      userName: userProfile.name || user.name,
+      userPhoto: userProfile.profilePhoto || '',
     });
-    newItem.owner = user._id;
+
     await newItem.save();
 
     res.status(StatusCodes.CREATED).json(
@@ -37,6 +52,7 @@ const addItem = async (req, res) => {
       .json(createResponse("error", error.message));
   }
 };
+
 
 const getItems = async (req, res) => {
   try {

@@ -49,7 +49,7 @@ app.use("/api/users", uploadProfilePhoto);
 app.use('/api/profile', userRoutes);
 app.use("/api/items", authenticateUser, itemRoutes);
 
-app.use("/api/v1/items", authenticateUser, itemRoutes);
+ 
 app.use("/api/v1/barter", authenticateUser, barterRouter);
 
 app.use(errorHandlerMiddleware);

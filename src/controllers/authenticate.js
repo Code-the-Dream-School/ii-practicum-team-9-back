@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const UserProfile = require("../models/UserProfile");
 const { StatusCodes } = require("http-status-codes");
 const { BadRequestError, UnauthenticatedError } = require("../errors");
 
@@ -25,6 +26,18 @@ const register = async (req, res) => {
     }
 
     const user = await User.create({ name, email, password });
+    const userProfile = new UserProfile({
+      user: user._id,  
+      role: 'user',  
+      location: '',  
+      profilePhoto: '',  
+      interests: [],  
+      tags: [],  
+      bio: '',  
+    });
+
+    await userProfile.save();
+
     const token = user.createJWT();
 
     res
@@ -43,6 +56,7 @@ const register = async (req, res) => {
       .json(createResponse("error", error.message));
   }
 };
+
 
 const login = async (req, res) => {
   try {
@@ -67,8 +81,9 @@ const login = async (req, res) => {
         .status(StatusCodes.UNAUTHORIZED)
         .json(createResponse("error", "Invalid credentials"));
     }
-
+     
     const token = user.createJWT();
+    const userProfile = await UserProfile.findOne({ user: user._id });
 
     res
       .status(StatusCodes.OK)
@@ -77,6 +92,7 @@ const login = async (req, res) => {
           name: user.name,
           id: user.id,
           token,
+          profile: userProfile || null,
         })
       );
   } catch (error) {

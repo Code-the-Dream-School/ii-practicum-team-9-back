@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 
 const ItemSchema = new mongoose.Schema(
   {
-    
     title: {
       type: String,
       required: true,
@@ -31,6 +30,14 @@ const ItemSchema = new mongoose.Schema(
       type: mongoose.Types.ObjectId,
       ref: "User",
       required: false,
+    },
+    userName: {
+      type: String,
+      required: true,
+    },
+    userPhoto: {
+      type: String,
+      default: "",
     },
   },
   {
