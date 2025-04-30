@@ -7,6 +7,17 @@ const logger = require("morgan");
 const {createServer} =require('node:http');
 const {Server} = require("socket.io");
 const  Message = require("./models/Message");
+const { Redis } = require("@upstash/redis");
+
+
+UPSTASH_REDIS_REST_URL="https://subtle-kangaroo-17378.upstash.io"
+UPSTASH_REDIS_REST_TOKEN="AUPiAAIjcDFkM2EwYzM4YWQ2YzI0YWZhYTNhZTQxMDgwNGJjNzgxMXAxMA"
+
+const redis = new Redis({
+  url: UPSTASH_REDIS_REST_URL,
+  token: UPSTASH_REDIS_REST_TOKEN,
+});
+
 
 const socket =createServer(app);
 const io = new Server(socket,{
@@ -37,6 +48,7 @@ app.use(favicon(__dirname + "/public/favicon.ico"));
 app.use("/api/v1", mainRouter);
 app.use("/auth", authRouter);
 app.use("/reset", resetPasswordRouter);
+app.use("/api/v1/items", authenticateUser, itemRoutes);
 
 app.use(errorHandlerMiddleware);
 io.on("connection", (socket) => {  
@@ -50,6 +62,28 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("user disconnected");
   });
+
+  socket.on("register",async (userId) =>{
+    await redis.set(`user:${userId}`, socket.id);
+    console.log(`User ${userId} registered with socket ID ${socket.id}`);
+  })
+
+  socket.on("private_message",async(data) =>{
+    console.log("data",data);
+    const { message_from, message_to, message:content } = data;    
+    const socketId = await redis.get(`user:${message_to}`);    
+    if (socketId){
+      const message = new Message({ message_from, message_to, content });
+      const result = await message.save();
+      console.log("message saved");
+      console.log("result",result)
+      io.to(socketId).emit("private_message", result);
+      return;
+    }
+    else{
+      console.log(`User ${message_to} not found`);
+    }
+  })
 
   
 });

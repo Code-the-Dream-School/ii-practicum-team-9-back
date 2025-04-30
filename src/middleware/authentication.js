@@ -5,6 +5,7 @@ const { UnauthenticatedError } = require("../errors");
 const auth = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer")) {
+    console.error(error)
     throw new UnauthenticatedError("Authentiation invalid");
   }
   const token = authHeader.split(" ")[1];
@@ -13,6 +14,7 @@ const auth = async (req, res, next) => {
     req.user = { userId: payload.userId, name: payload.name };
     next();
   } catch (error) {
+    console.error(error)
     throw new UnauthenticatedError("Authentication invalid");
   }
 };
