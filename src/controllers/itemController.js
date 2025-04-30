@@ -10,9 +10,9 @@ const createResponse = (status, message, data = []) => ({
 
 const addItem = async (req, res) => {
   try {
-    const {title, description, imageUrl, category, status } = req.body;
+    const { name, title, description, imageUrl, category, status } = req.body;
 
-    const user = await User.findById(req.user.userId);
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res
         .status(StatusCodes.NOT_FOUND)
@@ -80,7 +80,7 @@ const updateItem = async (req, res) => {
     }
 
     if (
-      item.owner.toString() !== req.user.userId &&
+      item.owner.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
     ) {
       return res
@@ -122,7 +122,7 @@ const deleteItem = async (req, res) => {
     }
 
     if (
-      item.owner.toString() !== req.user.userId &&
+      item.owner.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
     ) {
       return res
