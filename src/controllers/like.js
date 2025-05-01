@@ -11,7 +11,14 @@ const createResponse = (status, message, data = []) => ({
 
 const likeItem = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { itemId: id } = req.body;
+
+    if (!id) {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json(createResponse("error", "Missing item id"));
+    }
+
     const item = await Item.findOne({ _id: id });
     const user = await User.findOne({ _id: req.user._id });
 
@@ -19,11 +26,6 @@ const likeItem = async (req, res) => {
       return res
         .status(StatusCodes.NOT_FOUND)
         .json(createResponse("error", "Item not found"));
-    }
-    if (!user) {
-      return res
-        .status(StatusCodes.NOT_FOUND)
-        .json(createResponse("error", "User not found"));
     }
 
     const like = await Like.findOne({ user: user._id, item: item._id });
@@ -37,11 +39,9 @@ const likeItem = async (req, res) => {
       );
     } else {
       await Like.findOneAndDelete({ _id: like._id });
-      res.status(StatusCodes.OK).json(
-        createResponse("success", "Item was unliked", {
-          like: like,
-        })
-      );
+      res
+        .status(StatusCodes.OK)
+        .json(createResponse("success", "Item was unliked"));
     }
   } catch (error) {
     console.error("Error liking item:", error);
@@ -62,11 +62,6 @@ const getLikes = async (req, res) => {
         .status(StatusCodes.NOT_FOUND)
         .json(createResponse("error", "Item not found"));
     }
-    if (!user) {
-      return res
-        .status(StatusCodes.NOT_FOUND)
-        .json(createResponse("error", "User not found"));
-    }
 
     const likeCount = await Like.countDocuments({ item: item._id });
     const likeData = await Like.find({ item: item._id }).populate(
@@ -74,7 +69,7 @@ const getLikes = async (req, res) => {
       "name"
     );
 
-    if (!likeData || likeCount === 0) {
+    if (!likeData) {
       res
         .status(StatusCodes.NOT_FOUND)
         .json(createResponse("error", "Item like data not found"));
