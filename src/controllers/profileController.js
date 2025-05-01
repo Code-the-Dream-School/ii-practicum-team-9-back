@@ -30,7 +30,6 @@ const updateUserProfile = async (req, res) => {
       tags,
       bio,
       role,
-      profilePhoto,
       userProfilePhotoURL
     } = req.body;
 
@@ -40,21 +39,17 @@ const updateUserProfile = async (req, res) => {
       tags,
       bio,
       role,
-      userProfilePhotoURL,
     };
 
-   
-    if (profilePhoto) {
-      const result = await cloudinary.uploader.upload(profilePhoto, {
-        folder: 'user_profile_pics',
-      });
-      updatedFields.profilePhoto = result.secure_url;
+    
+    if (userProfilePhotoURL) {
+      updatedFields.profilePhoto = userProfilePhotoURL;
     }
 
     const updatedProfile = await UserProfile.findOneAndUpdate(
       { user: userId },
       updatedFields,
-      { new: true, upsert: true }  
+      { new: true, upsert: true }
     ).populate("user", "-password");
 
     res.status(200).json({ message: "Profile updated", profile: updatedProfile });
@@ -63,7 +58,6 @@ const updateUserProfile = async (req, res) => {
     res.status(500).json({ message: "Error updating profile" });
   }
 };
-
  
 const getAllUsers = async (req, res) => {
   try {

@@ -2,6 +2,7 @@ const Item = require("../models/item");
 const User = require("../models/User");
 const Barter = require("../models/Barter");
 const { StatusCodes } = require("http-status-codes");
+const mongoose = require("mongoose");
 
 const createResponse = (status, message, data = []) => ({
   status,
@@ -10,6 +11,9 @@ const createResponse = (status, message, data = []) => ({
 });
 
 const newBarter = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { offeredItem, initiator, requestedItem, recipient } = req.body;
 
@@ -53,8 +57,8 @@ const newBarter = async (req, res) => {
     }
 
     if (
-      req.user.userId !== initiatorSearch._id.toString() &&
-      req.user.userId !== recipientSearch._id.toString() &&
+      req.user._id.toString() !== initiatorSearch._id.toString() &&
+      req.user._id.toString() !== recipientSearch._id.toString() &&
       req.user.role !== "admin"
     ) {
       return res
@@ -67,39 +71,44 @@ const newBarter = async (req, res) => {
         );
     }
 
-    const newBarter = new Barter({
-      ...req.body,
-    });
-    newBarter.status = "offerMade";
+    const newBarter = await Barter.create(
+      [
+        {
+          ...req.body,
+          status: "offerMade",
+        },
+      ],
+      { session }
+    );
+
     offeredItemSearch.itemStatus = "pending";
     requestedItemSearch.itemStatus = "pending";
 
-    await newBarter.save();
-    await offeredItemSearch.save();
-    await requestedItemSearch.save();
+    await offeredItemSearch.save({ session });
+    await requestedItemSearch.save({ session });
+
+    await session.commitTransaction();
 
     res.status(StatusCodes.OK).json(
       createResponse("success", "Barter has been initiated", {
         barter: newBarter,
-        items: {
-          offeredItem: offeredItemSearch.name,
-          requestedItem: requestedItemSearch.name,
-        },
-        users: {
-          initiator: initiatorSearch.name,
-          recipient: recipientSearch.name,
-        },
       })
     );
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error creating barter:", error);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json(createResponse("error", error.message));
+  } finally {
+    session.endSession();
   }
 };
 
 const barterAcceptOrDeny = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { id } = req.params;
     const { status: statusUpdate } = req.body;
@@ -113,8 +122,8 @@ const barterAcceptOrDeny = async (req, res) => {
     }
 
     if (
-      req.user.userId !== barter.initiator.toString() &&
-      req.user.userId !== barter.recipient.toString() &&
+      req.user._id.toString() !== barter.initiator.toString() &&
+      req.user._id.toString() !== barter.recipient.toString() &&
       req.user.role !== "admin"
     ) {
       return res
@@ -124,34 +133,44 @@ const barterAcceptOrDeny = async (req, res) => {
         );
     }
 
-    barter.status = statusUpdate;
-    const offeredItem = await Item.findOne({ _id: barter.offeredItem });
-    const requestedItem = await Item.findOne({ _id: barter.requestedItem });
+    const updatedBarter = await Barter.findByIdAndUpdate(
+      { _id: barter._id },
+      { status: statusUpdate },
+      { new: true, runValidators: true, session: session }
+    );
 
-    await barter.save();
+    const offeredItem = await Item.findOne({ _id: updatedBarter.offeredItem });
+    const requestedItem = await Item.findOne({
+      _id: updatedBarter.requestedItem,
+    });
 
-    if (barter.status == "offerRejected") {
+    if (updatedBarter.status == "offerRejected") {
       offeredItem.itemStatus = "available";
       requestedItem.itemStatus = "available";
-      await offeredItem.save();
-      await requestedItem.save();
-    } else if (barter.status == "offerAccepted") {
+      await offeredItem.save({ session });
+      await requestedItem.save({ session });
+    } else if (updatedBarter.status == "offerAccepted") {
       offeredItem.itemStatus = "closed";
       requestedItem.itemStatus = "closed";
-      await offeredItem.save();
-      await requestedItem.save();
+      await offeredItem.save({ session });
+      await requestedItem.save({ session });
     }
+
+    await session.commitTransaction();
 
     res.status(StatusCodes.OK).json(
       createResponse("success", "Barter has been updated successfully", {
-        barter: barter,
+        barter: updatedBarter,
       })
     );
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error updating barter:", error);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json(createResponse("error", error.message));
+  } finally {
+    session.endSession();
   }
 };
 

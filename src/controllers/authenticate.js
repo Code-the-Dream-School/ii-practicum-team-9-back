@@ -1,7 +1,6 @@
 const User = require("../models/User");
 const UserProfile = require("../models/UserProfile");
 const { StatusCodes } = require("http-status-codes");
-const { BadRequestError, UnauthenticatedError } = require("../errors");
 
 const createResponse = (status, message, data = []) => ({
   status,
@@ -11,7 +10,7 @@ const createResponse = (status, message, data = []) => ({
 
 const register = async (req, res) => {  
   try{
-    console.log("BODY RECEIVED IN BACKEND:", req.body); 
+    
     const {name,email,password} = req.body;
     if (!name || !email || !password) {
       return res

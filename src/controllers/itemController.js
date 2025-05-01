@@ -21,7 +21,7 @@ const addItem = async (req, res) => {
 
     const imageUrl = req.file.path;   
 
-    const user = await User.findById(req.user.userId);
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res
         .status(StatusCodes.NOT_FOUND)
@@ -38,7 +38,7 @@ const addItem = async (req, res) => {
     const newItem = new Item({
       title,
       description,
-      imageUrl,  // Store Cloudinary image URL
+      imageUrl,   
       category,
       owner: user._id,
       userName: userProfile.name || user.name,
@@ -53,7 +53,7 @@ const addItem = async (req, res) => {
       })
     );
   } catch (error) {
-    console.error('Error adding item:', error);  // Log the actual error
+    console.error('Error adding item:', error);   
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json(createResponse("error", error.message));
@@ -123,7 +123,7 @@ const updateItem = async (req, res) => {
     }
 
     if (
-      item.owner.toString() !== req.user.userId &&
+      item.owner.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
     ) {
       return res
@@ -168,7 +168,7 @@ const deleteItem = async (req, res) => {
 
      
     if (
-      item.owner.toString() !== req.user.userId &&
+      item.owner.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
     ) {
       console.error(`User ${req.user.userId} is not authorized to delete this item`);  // Log unauthorized deletion attempt
