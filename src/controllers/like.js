@@ -69,18 +69,12 @@ const getLikes = async (req, res) => {
       "name"
     );
 
-    if (!likeData) {
-      res
-        .status(StatusCodes.NOT_FOUND)
-        .json(createResponse("error", "Item like data not found"));
-    } else {
-      res.status(StatusCodes.OK).json(
-        createResponse("success", "Item like data found", {
-          likeCount: likeCount,
-          likeData: likeData,
-        })
-      );
-    }
+    res.status(StatusCodes.OK).json(
+      createResponse("success", "Item like data found", {
+        likeCount: likeCount,
+        likeData: likeData,
+      })
+    );
   } catch (error) {
     console.error("Error finding like data:", error);
     res
