@@ -93,6 +93,7 @@ const getItems = async (req, res) => {
 const getUserItems = async (req, res) => {
   try {
     const userId = req.user.userId;   
+    console.log('User ID:', req.user.userId);
 
     const items = await Item.find({ owner: userId }).populate("owner", "name email");
 

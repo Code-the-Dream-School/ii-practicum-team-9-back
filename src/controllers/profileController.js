@@ -5,15 +5,26 @@ const cloudinary = require('cloudinary').v2;
  
 const getUserProfile = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user._id;
+
+    console.log('Fetching profile for user:', userId);
 
     const profile = await UserProfile.findOne({ user: userId }).populate("user", "-password");
 
     if (!profile) {
-      return res.status(404).json({ message: "User profile not found" });
+      const defaultProfile = new UserProfile({
+        user: userId,
+        profilePhoto: '/default-avatar.png',
+        bio: '',
+        location: '',
+        interests: [],
+        tags: []
+      });
+      await defaultProfile.save();
+      return res.status(200).json({ data: defaultProfile });
     }
 
-    res.status(200).json(profile);
+    res.status(200).json({ data: profile });
   } catch (error) {
     console.error("Error fetching user profile:", error);
     res.status(500).json({ message: "Error fetching user profile" });
