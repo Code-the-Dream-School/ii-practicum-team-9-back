@@ -26,8 +26,10 @@ const mainRouter = require("./routes/mainRouter.js");
 const authRouter = require("./routes/authenticate");
 const resetPasswordRouter = require("./routes/resetPassword");
 const barterRouter = require("./routes/barter");
+ 
 const itemRoutes = require("./routes/itemRoutes.js");
  
+const likeRouter = require("./routes/like");
 
 const errorHandlerMiddleware = require("./middleware/error-handler");
  
@@ -51,6 +53,7 @@ app.use("/api/items", authenticateUser, itemRoutes);
 
  
 app.use("/api/v1/barter", authenticateUser, barterRouter);
+app.use("/api/v1/like", authenticateUser, likeRouter);
 
 app.use(errorHandlerMiddleware);
 

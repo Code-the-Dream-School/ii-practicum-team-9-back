@@ -1,7 +1,6 @@
 const User = require("../models/User");
 const UserProfile = require("../models/UserProfile");
 const { StatusCodes } = require("http-status-codes");
-const { BadRequestError, UnauthenticatedError } = require("../errors");
 
 const createResponse = (status, message, data = []) => ({
   status,
