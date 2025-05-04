@@ -12,7 +12,7 @@ const createResponse = (status, message, data = []) => ({
 const getMessageByUser= async (req,res)=>{
   let currentUser = req.user;
   let id = currentUser._id;
-  let messages = await Message.find({ message_from: id })
+  let messages = await Message.find({ message_to: id })
                   .populate("message_to","name")
                   .populate("message_from","name");
   
