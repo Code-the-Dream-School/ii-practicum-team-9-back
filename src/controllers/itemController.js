@@ -11,8 +11,19 @@ const createResponse = (status, message, data = []) => ({
 
 const addItem = async (req, res) => {
   try {
-    const { title, description, imageUrl, category, status } = req.body;
+    const { title, description, category } = req.body;
 
+ 
+ 
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ status: 'error', message: 'Image file is required' });
+    }
+
+    const imageUrl = req.file.path;   
+
+ 
     const user = await User.findById(req.user._id);
     if (!user) {
       return res
@@ -30,9 +41,8 @@ const addItem = async (req, res) => {
     const newItem = new Item({
       title,
       description,
-      imageUrl,
+      imageUrl,   
       category,
-      status,
       owner: user._id,
       userName: userProfile.name || user.name,
       userPhoto: userProfile.profilePhoto || '',
@@ -46,12 +56,13 @@ const addItem = async (req, res) => {
       })
     );
   } catch (error) {
-    console.error("Error adding item:", error);
+    console.error('Error adding item:', error);   
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json(createResponse("error", error.message));
   }
 };
+
 
 
 const getItems = async (req, res) => {
@@ -76,6 +87,26 @@ const getItems = async (req, res) => {
     );
   } catch (error) {
     console.error("Error fetching items:", error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json(createResponse("error", error.message));
+  }
+};
+
+const getUserItems = async (req, res) => {
+  try {
+    const userId = req.user.userId;   
+    console.log('User ID:', req.user.userId);
+
+    const items = await Item.find({ owner: userId }).populate("owner", "name email");
+
+    res.status(StatusCodes.OK).json(
+      createResponse("success", "User's items found", {
+        items: items,
+      })
+    );
+  } catch (error) {
+    console.error("Error fetching user's items:", error);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json(createResponse("error", error.message));
@@ -128,19 +159,23 @@ const updateItem = async (req, res) => {
 const deleteItem = async (req, res) => {
   try {
     const { id } = req.params;
-
+    console.log('Deleting item with ID:', id);  
+     
     const item = await Item.findOne({ _id: id });
 
     if (!item) {
+      console.error(`Item with ID ${id} not found`);   
       return res
         .status(StatusCodes.NOT_FOUND)
         .json(createResponse("error", "Item not found"));
     }
 
+     
     if (
       item.owner.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
     ) {
+      console.error(`User ${req.user.userId} is not authorized to delete this item`);  // Log unauthorized deletion attempt
       return res
         .status(StatusCodes.UNAUTHORIZED)
         .json(
@@ -148,18 +183,23 @@ const deleteItem = async (req, res) => {
         );
     }
 
+  
     await Item.deleteOne({ _id: item._id });
+    console.log(`Item with ID ${id} deleted successfully`);  
 
+    
     res.status(StatusCodes.OK).json(
       createResponse("success", "Item deleted successfully", {
         item: item,
       })
     );
   } catch (error) {
+    console.error('Error in deleteItem function:', error.message);   
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json(createResponse("error", error.message));
   }
 };
 
-module.exports = { addItem, getItems, updateItem, deleteItem };
+
+module.exports = { addItem, getItems, updateItem, deleteItem, getUserItems };

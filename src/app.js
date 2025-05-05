@@ -4,7 +4,7 @@ const app = express();
 const cors = require("cors");
 const favicon = require("express-favicon");
 const logger = require("morgan");
-const uploadProfilePhoto = require("./routes/uploadProfilePhoto");
+const profilePhotoRoutes = require("./routes/uploadProfilePhoto.js");
 const userRoutes = require('./routes/userRoutes');
 
  
@@ -40,16 +40,16 @@ app.use(express.json());
 
 app.use(express.static("public"));
 
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use(logger("dev"));
 app.use(favicon(__dirname + "/public/favicon.ico"));
 
 app.use("/api/v1", mainRouter);
 app.use("/auth", authRouter);
 app.use("/reset", resetPasswordRouter);
-app.use("/api/users", uploadProfilePhoto);
 app.use('/api/profile', userRoutes);
 app.use("/api/items", authenticateUser, itemRoutes);
+app.use('/api/profile', profilePhotoRoutes);
 
  
 app.use("/api/v1/barter", authenticateUser, barterRouter);

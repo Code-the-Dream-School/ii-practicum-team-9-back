@@ -5,15 +5,26 @@ const cloudinary = require('cloudinary').v2;
  
 const getUserProfile = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user._id;
+
+    console.log('Fetching profile for user:', userId);
 
     const profile = await UserProfile.findOne({ user: userId }).populate("user", "-password");
 
     if (!profile) {
-      return res.status(404).json({ message: "User profile not found" });
+      const defaultProfile = new UserProfile({
+        user: userId,
+        profilePhoto: '/default-avatar.png',
+        bio: '',
+        location: '',
+        interests: [],
+        tags: []
+      });
+      await defaultProfile.save();
+      return res.status(200).json({ data: defaultProfile });
     }
 
-    res.status(200).json(profile);
+    res.status(200).json({ data: profile });
   } catch (error) {
     console.error("Error fetching user profile:", error);
     res.status(500).json({ message: "Error fetching user profile" });
@@ -30,7 +41,6 @@ const updateUserProfile = async (req, res) => {
       tags,
       bio,
       role,
-      profilePhoto,
       userProfilePhotoURL
     } = req.body;
 
@@ -40,21 +50,17 @@ const updateUserProfile = async (req, res) => {
       tags,
       bio,
       role,
-      userProfilePhotoURL,
     };
 
-   
-    if (profilePhoto) {
-      const result = await cloudinary.uploader.upload(profilePhoto, {
-        folder: 'user_profile_pics',
-      });
-      updatedFields.profilePhoto = result.secure_url;
+    
+    if (userProfilePhotoURL) {
+      updatedFields.profilePhoto = userProfilePhotoURL;
     }
 
     const updatedProfile = await UserProfile.findOneAndUpdate(
       { user: userId },
       updatedFields,
-      { new: true, upsert: true }  
+      { new: true, upsert: true }
     ).populate("user", "-password");
 
     res.status(200).json({ message: "Profile updated", profile: updatedProfile });
@@ -63,7 +69,6 @@ const updateUserProfile = async (req, res) => {
     res.status(500).json({ message: "Error updating profile" });
   }
 };
-
  
 const getAllUsers = async (req, res) => {
   try {
