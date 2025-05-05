@@ -6,18 +6,10 @@ const cloudinary = require('cloudinary').v2;
 const getUserProfile = async (req, res) => {
   try {
     const userId = req.user._id;
-    console.log('Fetching profile for user:', userId);
 
-    const profile = await UserProfile.findOne({ user: userId }).populate("user", "-password");
-    console.log('Found profile:', {
-      id: profile?._id,
-      userId: profile?.user?._id,
-      profilePhoto: profile?.profilePhoto,
-      fullProfile: profile
-    });
+    const profile = await UserProfile.findOne({ user: userId }).populate("user", "name email");
 
     if (!profile) {
-      console.log('No profile found, creating default profile');
       const defaultProfile = new UserProfile({
         user: userId,
         profilePhoto: '/default-avatar.png',
@@ -27,15 +19,26 @@ const getUserProfile = async (req, res) => {
         tags: []
       });
       await defaultProfile.save();
-      console.log('Created default profile:', {
-        id: defaultProfile._id,
-        userId: defaultProfile.user,
-        profilePhoto: defaultProfile.profilePhoto
-      });
       return res.status(200).json({ data: defaultProfile });
     }
 
-    res.status(200).json({ data: profile });
+    // Create a clean response object
+    const cleanProfile = {
+      _id: profile._id,
+      user: {
+        _id: profile.user._id,
+        name: profile.user.name,
+        email: profile.user.email
+      },
+      role: profile.role,
+      location: profile.location,
+      profilePhoto: profile.profilePhoto,
+      interests: profile.interests,
+      tags: profile.tags,
+      bio: profile.bio
+    };
+
+    res.status(200).json({ data: cleanProfile });
   } catch (error) {
     console.error("Error fetching user profile:", error);
     res.status(500).json({ message: "Error fetching user profile" });
