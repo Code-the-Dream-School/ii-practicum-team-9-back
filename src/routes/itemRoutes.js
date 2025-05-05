@@ -13,7 +13,7 @@ const {
 
 router.post('/add-item', upload.single('image'), addItem);
 router.get("/explore", getItems);
-router.patch("/update-item/:id", updateItem);
+router.patch("/update-item/:id", upload.single('image'), updateItem);
 router.delete("/delete-item/:id", deleteItem);
 router.get('/user/items', getUserItems);
  

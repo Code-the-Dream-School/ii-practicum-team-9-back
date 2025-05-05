@@ -15,11 +15,26 @@ const uploadProfilePhoto = async (req, res) => {
       { user: userId },
       { $set: { profilePhoto: photoUrl } },
       { new: true }
-    ).populate("user", "-password");
+    ).populate("user", "name email");
+
+    const cleanProfile = {
+      _id: updatedProfile._id,
+      user: {
+        _id: updatedProfile.user._id,
+        name: updatedProfile.user.name,
+        email: updatedProfile.user.email
+      },
+      role: updatedProfile.role,
+      location: updatedProfile.location,
+      profilePhoto: updatedProfile.profilePhoto,
+      interests: updatedProfile.interests,
+      tags: updatedProfile.tags,
+      bio: updatedProfile.bio
+    };
 
     res.status(200).json({ 
       message: "Profile photo uploaded successfully",
-      data: updatedProfile
+      data: cleanProfile
     });
   } catch (error) {
     console.error("Error uploading profile photo:", error);

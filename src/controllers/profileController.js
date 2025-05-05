@@ -22,7 +22,7 @@ const getUserProfile = async (req, res) => {
       return res.status(200).json({ data: defaultProfile });
     }
 
-    // Create a clean response object
+   
     const cleanProfile = {
       _id: profile._id,
       user: {
@@ -49,8 +49,6 @@ const getUserProfile = async (req, res) => {
 const updateUserProfile = async (req, res) => {
   try {
     const userId = req.user._id;
-    console.log('Updating profile for user:', userId);
-    console.log('Update data:', req.body);
 
     const updateFields = {};
     if (req.body.location !== undefined) updateFields.location = req.body.location;
@@ -60,19 +58,30 @@ const updateUserProfile = async (req, res) => {
     if (req.body.role !== undefined) updateFields.role = req.body.role;
     if (req.body.profilePhoto !== undefined) updateFields.profilePhoto = req.body.profilePhoto;
 
-    console.log('Fields to update:', updateFields);
-
     const updatedProfile = await UserProfile.findOneAndUpdate(
       { user: userId },
       updateFields,
-      { new: true, upsert: true }
-    ).populate("user", "-password");
+      { new: true }
+    ).populate("user", "name email");
 
-    console.log('Updated profile:', updatedProfile);
+    const cleanProfile = {
+      _id: updatedProfile._id,
+      user: {
+        _id: updatedProfile.user._id,
+        name: updatedProfile.user.name,
+        email: updatedProfile.user.email
+      },
+      role: updatedProfile.role,
+      location: updatedProfile.location,
+      profilePhoto: updatedProfile.profilePhoto,
+      interests: updatedProfile.interests,
+      tags: updatedProfile.tags,
+      bio: updatedProfile.bio
+    };
 
     res.status(200).json({ 
       message: "Profile updated", 
-      data: updatedProfile
+      data: cleanProfile
     });
   } catch (error) {
     console.error("Error updating profile:", error);

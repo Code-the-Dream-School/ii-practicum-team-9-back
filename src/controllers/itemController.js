@@ -121,7 +121,7 @@ const getUserItems = async (req, res) => {
 const updateItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, title, description, imageUrl, category } = req.body;
+    const { title, description, category } = req.body;
 
     const item = await Item.findOne({ _id: id });
 
@@ -142,15 +142,36 @@ const updateItem = async (req, res) => {
         );
     }
 
+    const updateFields = {
+      title,
+      description,
+      category
+    };
+
+    // If a new image was uploaded, update the imageUrl
+    if (req.file) {
+      updateFields.imageUrl = req.file.path;
+    }
+
     const updatedItem = await Item.findByIdAndUpdate(
       { _id: item._id },
-      { ...req.body },
+      updateFields,
       { new: true, runValidators: true }
-    );
+    ).populate("owner", "name email");
+
+    // Get the user profile to include user information
+    const userProfile = await UserProfile.findOne({ user: req.user._id });
+
+    // Create a complete response object
+    const responseItem = {
+      ...updatedItem.toObject(),
+      userName: userProfile?.name || updatedItem.userName,
+      userPhoto: userProfile?.profilePhoto || updatedItem.userPhoto
+    };
 
     res.status(StatusCodes.OK).json(
       createResponse("success", "Item updated successfully", {
-        item: updatedItem,
+        item: responseItem,
       })
     );
   } catch (error) {
