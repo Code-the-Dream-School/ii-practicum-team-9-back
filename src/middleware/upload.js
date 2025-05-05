@@ -5,8 +5,12 @@ const cloudinary = require("../utils/Cloudinary");
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: "item_images", 
+    folder: "profile_photos", 
     allowed_formats: ["jpg", "png", "jpeg", "webp"],
+    transformation: [{ width: 500, height: 500, crop: "limit" }],
+    resource_type: "image",
+    format: "jpg",
+    public_id: (req, file) => `profile-${Date.now()}-${file.originalname.split('.')[0]}`
   },
 });
 
