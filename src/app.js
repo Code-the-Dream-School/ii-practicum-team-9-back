@@ -26,6 +26,7 @@ const mainRouter = require("./routes/mainRouter.js");
 const authRouter = require("./routes/authenticate");
 const resetPasswordRouter = require("./routes/resetPassword");
 const barterRouter = require("./routes/barter");
+ 
 const itemRoutes = require("./routes/itemRoutes.js");
  
 const likeRouter = require("./routes/like");
