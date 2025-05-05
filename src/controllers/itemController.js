@@ -17,6 +17,8 @@ const addItem = async (req, res) => {
 
     const { title, description, category } = req.body;
 
+ 
+ 
     if (!req.file) {
       return res
         .status(400)
@@ -31,6 +33,7 @@ const addItem = async (req, res) => {
 
     const imageUrl = req.file.path;   
 
+ 
     const user = await User.findById(req.user._id);
     if (!user) {
       return res
