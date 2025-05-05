@@ -27,6 +27,7 @@ const authRouter = require("./routes/authenticate");
 const resetPasswordRouter = require("./routes/resetPassword");
 const barterRouter = require("./routes/barter");
 const itemRoutes = require("./routes/itemRoutes.js");
+const adminRoutes = require("./routes/adminRoutes");
  
 const likeRouter = require("./routes/like");
 
@@ -46,8 +47,9 @@ app.use(favicon(__dirname + "/public/favicon.ico"));
 app.use("/api/v1", mainRouter);
 app.use("/auth", authRouter);
 app.use("/reset", resetPasswordRouter);
-app.use('/api/profile', userRoutes);
+app.use('/api/users', userRoutes);
 app.use("/api/items", authenticateUser, itemRoutes);
+app.use("/api/admin", authenticateUser, adminRoutes);
 app.use('/api/profile', profilePhotoRoutes);
 
  
@@ -69,5 +71,5 @@ io.on("connection", (socket) => {
   });
 });
 
-module.exports = socket;
+module.exports = { app, socket };
 //module.exports = app;

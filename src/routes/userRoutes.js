@@ -10,7 +10,10 @@ const authorizeAdmin = require('../middleware/authorizeAdmin');
 const upload = require('../middleware/upload'); 
 
 
-router.get('/profile', authenticateUser, getUserProfile);
+router.get('/profile', authenticateUser, (req, res, next) => {
+  console.log('Profile route hit');
+  next();
+}, getUserProfile);
  
 router.put('/profile', authenticateUser, updateUserProfile);
 

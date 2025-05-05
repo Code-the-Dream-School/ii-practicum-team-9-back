@@ -3,7 +3,7 @@ const connectDB = require("./db/connect");
 
 dotenv.config();
 
-const app = require("./app.js");
+const { app } = require("./app.js");
 
 // MongoDB connection
 const mongoURL = process.env.MONGO_URI || "mongodb://localhost:27017/barterDB";

@@ -11,12 +11,22 @@ const createResponse = (status, message, data = []) => ({
 
 const addItem = async (req, res) => {
   try {
+    console.log('Request body:', req.body);
+    console.log('Request file:', req.file);
+    console.log('Request user:', req.user);
+
     const { title, description, category } = req.body;
 
     if (!req.file) {
       return res
         .status(400)
         .json({ status: 'error', message: 'Image file is required' });
+    }
+
+    if (!req.user || !req.user._id) {
+      return res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json(createResponse("error", "User not authenticated"));
     }
 
     const imageUrl = req.file.path;   
@@ -53,14 +63,12 @@ const addItem = async (req, res) => {
       })
     );
   } catch (error) {
-    console.error('Error adding item:', error);   
+    console.error('Error adding item:', error);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json(createResponse("error", error.message));
   }
 };
-
-
 
 const getItems = async (req, res) => {
   try {
@@ -198,5 +206,21 @@ const deleteItem = async (req, res) => {
   }
 };
 
+const deleteAllItems = async (req, res) => {
+  try {
+    // Delete only the user's items
+    const result = await Item.deleteMany({ owner: req.user._id });
+    console.log(`Deleted ${result.deletedCount} items for user ${req.user._id}`);
 
-module.exports = { addItem, getItems, updateItem, deleteItem, getUserItems };
+    res.status(StatusCodes.OK).json(
+      createResponse("success", `Successfully deleted ${result.deletedCount} items`)
+    );
+  } catch (error) {
+    console.error('Error deleting items:', error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json(createResponse("error", error.message));
+  }
+};
+
+module.exports = { addItem, getItems, updateItem, deleteItem, getUserItems, deleteAllItems };
