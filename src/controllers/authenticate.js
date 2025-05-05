@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const UserProfile = require("../models/UserProfile");
 const { StatusCodes } = require("http-status-codes");
 
 const createResponse = (status, message, data = []) => ({
@@ -7,9 +8,10 @@ const createResponse = (status, message, data = []) => ({
   data,
 });
 
-const register = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
+const register = async (req, res) => {  
+  try{
+    
+    const {name,email,password} = req.body;
     if (!name || !email || !password) {
       return res
         .status(StatusCodes.BAD_REQUEST)
@@ -23,6 +25,18 @@ const register = async (req, res) => {
     }
 
     const user = await User.create({ name, email, password });
+    const userProfile = new UserProfile({
+      user: user._id,  
+      role: 'user',  
+      location: '',  
+      profilePhoto: '',  
+      interests: [],  
+      tags: [],  
+      bio: '',  
+    });
+
+    await userProfile.save();
+
     const token = user.createJWT();
 
     res
@@ -41,6 +55,7 @@ const register = async (req, res) => {
       .json(createResponse("error", error.message));
   }
 };
+
 
 const login = async (req, res) => {
   try {
@@ -65,8 +80,9 @@ const login = async (req, res) => {
         .status(StatusCodes.UNAUTHORIZED)
         .json(createResponse("error", "Invalid credentials"));
     }
-
+     
     const token = user.createJWT();
+    const userProfile = await UserProfile.findOne({ user: user._id });
 
     res
       .status(StatusCodes.OK)
@@ -75,6 +91,7 @@ const login = async (req, res) => {
           name: user.name,
           id: user.id,
           token,
+          profile: userProfile || null,
         })
       );
   } catch (error) {
@@ -84,6 +101,7 @@ const login = async (req, res) => {
       .json(createResponse("error", error.message));
   }
 };
+
 
 module.exports = {
   register,
