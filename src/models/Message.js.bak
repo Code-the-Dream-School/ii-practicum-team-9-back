@@ -13,10 +13,10 @@ const MessageSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  message: {
+  content: {
     type: String,
     required: true,
-    minlength: 1,
+    minlength: 2,
     maxlength: 500,
   },  
   createdAt: {
