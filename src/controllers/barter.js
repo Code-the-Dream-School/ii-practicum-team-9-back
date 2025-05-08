@@ -1,6 +1,7 @@
 const Item = require("../models/item");
 const User = require("../models/User");
 const Barter = require("../models/Barter");
+const UserProfile = require("../models/UserProfile");
 const { StatusCodes } = require("http-status-codes");
 const mongoose = require("mongoose");
 
@@ -16,11 +17,15 @@ const newBarter = async (req, res) => {
 
   try {
     const { offeredItem, initiator, requestedItem, recipient } = req.body;
+    const userId = req.user._id;
 
     const offeredItemSearch = await Item.findOne({ _id: offeredItem });
     const requestedItemSearch = await Item.findOne({ _id: requestedItem });
     const initiatorSearch = await User.findOne({ _id: initiator });
     const recipientSearch = await User.findOne({ _id: recipient });
+
+    const userProfile = await UserProfile.findOne({ user: userId });
+    console.log(userProfile);
 
     if (!offeredItemSearch || !requestedItemSearch) {
       return res
@@ -47,7 +52,7 @@ const newBarter = async (req, res) => {
       (initiatorSearch._id.toString() !== offeredItemSearch.owner.toString() ||
         recipientSearch._id.toString() !==
           requestedItemSearch.owner.toString()) &&
-      req.user.role !== "admin"
+      userProfile.role !== "admin"
     ) {
       return res
         .status(StatusCodes.UNAUTHORIZED)
@@ -59,7 +64,7 @@ const newBarter = async (req, res) => {
     if (
       req.user._id.toString() !== initiatorSearch._id.toString() &&
       req.user._id.toString() !== recipientSearch._id.toString() &&
-      req.user.role !== "admin"
+      userProfile.role !== "admin"
     ) {
       return res
         .status(StatusCodes.UNAUTHORIZED)
@@ -115,6 +120,8 @@ const barterAcceptOrDeny = async (req, res) => {
 
     const barter = await Barter.findOne({ _id: id });
 
+    const userProfile = await UserProfile.findOne({ user: req.user._id });
+
     if (!barter) {
       return res
         .status(StatusCodes.NOT_FOUND)
@@ -124,7 +131,7 @@ const barterAcceptOrDeny = async (req, res) => {
     if (
       req.user._id.toString() !== barter.initiator.toString() &&
       req.user._id.toString() !== barter.recipient.toString() &&
-      req.user.role !== "admin"
+      userProfile.role !== "admin"
     ) {
       return res
         .status(StatusCodes.UNAUTHORIZED)

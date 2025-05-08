@@ -1,23 +1,18 @@
- const User = require('../models/User');
+const UserProfile = require("../models/UserProfile");
 
 const authorizeAdmin = async (req, res, next) => {
   try {
-    const userId = req.user.userId;  
-    const user = await User.findById(userId);
+    const userId = req.user._id;
+    const userProfile = await UserProfile.findOne({ user: userId });
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    if (userProfile.role !== "admin") {
+      return res.status(403).json({ message: "Access denied. Admins only." });
     }
 
-    
-    if (user.role !== 'admin') {
-      return res.status(403).json({ message: 'Access denied. Admins only.' });
-    }
-
-    next();  
+    next();
   } catch (error) {
-    console.error('Error authorizing admin:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error authorizing admin:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 

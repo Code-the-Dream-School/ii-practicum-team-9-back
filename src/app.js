@@ -5,12 +5,11 @@ const cors = require("cors");
 const favicon = require("express-favicon");
 const logger = require("morgan");
 const profilePhotoRoutes = require("./routes/uploadProfilePhoto.js");
-const userRoutes = require('./routes/userRoutes');
+const userRoutes = require("./routes/userRoutes");
 
- 
-const {createServer} =require('node:http');
-const {Server} = require("socket.io");
-const  Message = require("./models/Message");
+const { createServer } = require("node:http");
+const { Server } = require("socket.io");
+const Message = require("./models/Message");
 
 const socket = createServer(app);
 const io = new Server(socket, {
@@ -26,15 +25,11 @@ const mainRouter = require("./routes/mainRouter.js");
 const authRouter = require("./routes/authenticate");
 const resetPasswordRouter = require("./routes/resetPassword");
 const barterRouter = require("./routes/barter");
- 
 const itemRoutes = require("./routes/itemRoutes.js");
- 
 const likeRouter = require("./routes/like");
 
 const errorHandlerMiddleware = require("./middleware/error-handler");
- 
 
- 
 app.use(cors());
 app.use(express.json());
 
@@ -47,11 +42,9 @@ app.use(favicon(__dirname + "/public/favicon.ico"));
 app.use("/api/v1", mainRouter);
 app.use("/auth", authRouter);
 app.use("/reset", resetPasswordRouter);
-app.use('/api/profile', userRoutes);
+app.use("/api/profile", userRoutes);
 app.use("/api/items", authenticateUser, itemRoutes);
-app.use('/api/profile', profilePhotoRoutes);
-
- 
+app.use("/api/profile", profilePhotoRoutes);
 app.use("/api/v1/barter", authenticateUser, barterRouter);
 app.use("/api/v1/like", authenticateUser, likeRouter);
 
