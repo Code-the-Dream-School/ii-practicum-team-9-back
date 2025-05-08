@@ -31,15 +31,7 @@ const UserProfileSchema = new mongoose.Schema({
   bio: {
     type: String,
     default: "",
-  },
-  userProfilePhotoURL: {
-    type: String,
-    required: false,
-  },
-  profilePhoto: {
-  type: String,
-  default: "", // or null
-}
+  }
 });
 
 module.exports = mongoose.model("UserProfile", UserProfileSchema);

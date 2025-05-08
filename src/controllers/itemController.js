@@ -11,19 +11,23 @@ const createResponse = (status, message, data = []) => ({
 
 const addItem = async (req, res) => {
   try {
+    
+
     const { title, description, category } = req.body;
 
- 
- 
     if (!req.file) {
       return res
         .status(400)
         .json({ status: 'error', message: 'Image file is required' });
     }
 
+    if (!req.user || !req.user._id) {
+      return res
+        .status(StatusCodes.UNAUTHORIZED);
+    }
+
     const imageUrl = req.file.path;   
 
- 
     const user = await User.findById(req.user._id);
     if (!user) {
       return res
@@ -56,14 +60,12 @@ const addItem = async (req, res) => {
       })
     );
   } catch (error) {
-    console.error('Error adding item:', error);   
+    console.error('Error adding item:', error);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json(createResponse("error", error.message));
   }
 };
-
-
 
 const getItems = async (req, res) => {
   try {
@@ -116,7 +118,7 @@ const getUserItems = async (req, res) => {
 const updateItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, title, description, imageUrl, category } = req.body;
+    const { title, description, category } = req.body;
 
     const item = await Item.findOne({ _id: id });
 
@@ -137,15 +139,36 @@ const updateItem = async (req, res) => {
         );
     }
 
+    const updateFields = {
+      title,
+      description,
+      category
+    };
+
+    // If a new image was uploaded, update the imageUrl
+    if (req.file) {
+      updateFields.imageUrl = req.file.path;
+    }
+
     const updatedItem = await Item.findByIdAndUpdate(
       { _id: item._id },
-      { ...req.body },
+      updateFields,
       { new: true, runValidators: true }
-    );
+    ).populate("owner", "name email");
+
+    // Get the user profile to include user information
+    const userProfile = await UserProfile.findOne({ user: req.user._id });
+
+    // Create a complete response object
+    const responseItem = {
+      ...updatedItem.toObject(),
+      userName: userProfile?.name || updatedItem.userName,
+      userPhoto: userProfile?.profilePhoto || updatedItem.userPhoto
+    };
 
     res.status(StatusCodes.OK).json(
       createResponse("success", "Item updated successfully", {
-        item: updatedItem,
+        item: responseItem,
       })
     );
   } catch (error) {
@@ -201,5 +224,21 @@ const deleteItem = async (req, res) => {
   }
 };
 
+const deleteAllItems = async (req, res) => {
+  try {
+    // Delete only the user's items
+    const result = await Item.deleteMany({ owner: req.user._id });
+     
 
-module.exports = { addItem, getItems, updateItem, deleteItem, getUserItems };
+    res.status(StatusCodes.OK).json(
+      createResponse("success", `Successfully deleted ${result.deletedCount} items`)
+    );
+  } catch (error) {
+    console.error('Error deleting items:', error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json(createResponse("error", error.message));
+  }
+};
+
+module.exports = { addItem, getItems, updateItem, deleteItem, getUserItems, deleteAllItems };

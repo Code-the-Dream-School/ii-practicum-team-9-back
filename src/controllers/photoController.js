@@ -2,25 +2,43 @@ const UserProfile = require("../models/UserProfile");
 
 const uploadProfilePhoto = async (req, res) => {
   try {
-    const userId = req.user.userId;
-    if (!req.file || !req.file.path) {
-      return res.status(400).json({ message: "No image uploaded" });
+    if (!req.file) {
+      return res.status(400).json({ 
+        message: "No file uploaded. Please make sure to send the image with the field name 'image' in form-data" 
+      });
     }
+
+    const userId = req.user._id;
+    const photoUrl = req.file.secure_url || req.file.url || req.file.path;
 
     const updatedProfile = await UserProfile.findOneAndUpdate(
       { user: userId },
-      { profilePhoto: req.file.path },
-      { new: true, upsert: true }
-    ).populate("user", "-password");
+      { $set: { profilePhoto: photoUrl } },
+      { new: true }
+    ).populate("user", "name email");
 
-    res.status(200).json({
+    const cleanProfile = {
+      _id: updatedProfile._id,
+      user: {
+        _id: updatedProfile.user._id,
+        name: updatedProfile.user.name,
+        email: updatedProfile.user.email
+      },
+      role: updatedProfile.role,
+      location: updatedProfile.location,
+      profilePhoto: updatedProfile.profilePhoto,
+      interests: updatedProfile.interests,
+      tags: updatedProfile.tags,
+      bio: updatedProfile.bio
+    };
+
+    res.status(200).json({ 
       message: "Profile photo uploaded successfully",
-      profile: updatedProfile,
-      profilePhotoURL: req.file.path,
+      data: cleanProfile
     });
   } catch (error) {
-    console.error("Upload error:", error);
-    res.status(500).json({ message: "Failed to upload profile photo" });
+    console.error("Error uploading profile photo:", error);
+    res.status(500).json({ message: "Error uploading profile photo" });
   }
 };
 
