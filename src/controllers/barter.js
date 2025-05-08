@@ -25,7 +25,6 @@ const newBarter = async (req, res) => {
     const recipientSearch = await User.findOne({ _id: recipient });
 
     const userProfile = await UserProfile.findOne({ user: userId });
-    console.log(userProfile);
 
     if (!offeredItemSearch || !requestedItemSearch) {
       return res
