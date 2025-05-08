@@ -20,11 +20,9 @@ const getMessageByUser= async (req,res)=>{
 
 
    res.status(StatusCodes.OK).json(
-    createResponse("success", "Message retrieved successfully", {
-      message: "Message retrieved successfully",
+    createResponse("success", "Message retrieved successfully", {      
       data: { messages },
-    })
-      );
+    }));
 }
 
 module.exports = {
