@@ -10,6 +10,7 @@ const {createServer} =require('node:http');
 const {Server} = require("socket.io");
 const  Message = require("./models/Message");
 const {Redis} = require("@upstash/redis");
+const path = require("path");
 
 const socket = createServer(app);
 const io = new Server(socket, {
@@ -37,12 +38,11 @@ const messagesRouter = require("./routes/messages");
 
 const errorHandlerMiddleware = require("./middleware/error-handler");
  
-
- 
 app.use(cors());
 app.use(express.json());
+const publicFolder = process.env.NODE_ENV === "production"?"dist":"public";
 
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname,publicFolder)));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(logger("dev"));
