@@ -174,4 +174,6 @@ const barterAcceptOrDeny = async (req, res) => {
   }
 };
 
+
+
 module.exports = { newBarter, barterAcceptOrDeny };
