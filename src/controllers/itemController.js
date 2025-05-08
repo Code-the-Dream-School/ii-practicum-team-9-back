@@ -11,9 +11,7 @@ const createResponse = (status, message, data = []) => ({
 
 const addItem = async (req, res) => {
   try {
-    console.log('Request body:', req.body);
-    console.log('Request file:', req.file);
-    console.log('Request user:', req.user);
+    
 
     const { title, description, category } = req.body;
 
@@ -25,8 +23,7 @@ const addItem = async (req, res) => {
 
     if (!req.user || !req.user._id) {
       return res
-        .status(StatusCodes.UNAUTHORIZED)
-        .json(createResponse("error", "User not authenticated"));
+        .status(StatusCodes.UNAUTHORIZED);
     }
 
     const imageUrl = req.file.path;   
@@ -231,7 +228,7 @@ const deleteAllItems = async (req, res) => {
   try {
     // Delete only the user's items
     const result = await Item.deleteMany({ owner: req.user._id });
-    console.log(`Deleted ${result.deletedCount} items for user ${req.user._id}`);
+     
 
     res.status(StatusCodes.OK).json(
       createResponse("success", `Successfully deleted ${result.deletedCount} items`)
