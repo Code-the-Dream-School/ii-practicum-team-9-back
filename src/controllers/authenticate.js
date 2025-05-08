@@ -82,7 +82,20 @@ const login = async (req, res) => {
     }
      
     const token = user.createJWT();
-    const userProfile = await UserProfile.findOne({ user: user._id });
+    let userProfile = await UserProfile.findOne({ user: user._id });
+
+    // Create a profile if one doesn't exist
+    if (!userProfile) {
+      userProfile = await UserProfile.create({
+        user: user._id,
+        role: 'user',
+        location: '',
+        profilePhoto: '',
+        interests: [],
+        tags: [],
+        bio: '',
+      });
+    }
 
     res
       .status(StatusCodes.OK)
@@ -91,7 +104,7 @@ const login = async (req, res) => {
           name: user.name,
           id: user.id,
           token,
-          profile: userProfile || null,
+          profile: userProfile,
         })
       );
   } catch (error) {

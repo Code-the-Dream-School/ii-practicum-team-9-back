@@ -7,9 +7,7 @@ const getUserProfile = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    console.log('Fetching profile for user:', userId);
-
-    const profile = await UserProfile.findOne({ user: userId }).populate("user", "-password");
+    const profile = await UserProfile.findOne({ user: userId }).populate("user", "name email");
 
     if (!profile) {
       const defaultProfile = new UserProfile({
@@ -24,7 +22,23 @@ const getUserProfile = async (req, res) => {
       return res.status(200).json({ data: defaultProfile });
     }
 
-    res.status(200).json({ data: profile });
+   
+    const cleanProfile = {
+      _id: profile._id,
+      user: {
+        _id: profile.user._id,
+        name: profile.user.name,
+        email: profile.user.email
+      },
+      role: profile.role,
+      location: profile.location,
+      profilePhoto: profile.profilePhoto,
+      interests: profile.interests,
+      tags: profile.tags,
+      bio: profile.bio
+    };
+
+    res.status(200).json({ data: cleanProfile });
   } catch (error) {
     console.error("Error fetching user profile:", error);
     res.status(500).json({ message: "Error fetching user profile" });
@@ -34,36 +48,41 @@ const getUserProfile = async (req, res) => {
  
 const updateUserProfile = async (req, res) => {
   try {
-    const userId = req.user.userId;
-    const {
-      location,
-      interests,
-      tags,
-      bio,
-      role,
-      userProfilePhotoURL
-    } = req.body;
+    const userId = req.user._id;
 
-    const updatedFields = {
-      location,
-      interests,
-      tags,
-      bio,
-      role,
-    };
-
-    
-    if (userProfilePhotoURL) {
-      updatedFields.profilePhoto = userProfilePhotoURL;
-    }
+    const updateFields = {};
+    if (req.body.location !== undefined) updateFields.location = req.body.location;
+    if (req.body.interests !== undefined) updateFields.interests = req.body.interests;
+    if (req.body.tags !== undefined) updateFields.tags = req.body.tags;
+    if (req.body.bio !== undefined) updateFields.bio = req.body.bio;
+    if (req.body.role !== undefined) updateFields.role = req.body.role;
+    if (req.body.profilePhoto !== undefined) updateFields.profilePhoto = req.body.profilePhoto;
 
     const updatedProfile = await UserProfile.findOneAndUpdate(
       { user: userId },
-      updatedFields,
-      { new: true, upsert: true }
-    ).populate("user", "-password");
+      updateFields,
+      { new: true }
+    ).populate("user", "name email");
 
-    res.status(200).json({ message: "Profile updated", profile: updatedProfile });
+    const cleanProfile = {
+      _id: updatedProfile._id,
+      user: {
+        _id: updatedProfile.user._id,
+        name: updatedProfile.user.name,
+        email: updatedProfile.user.email
+      },
+      role: updatedProfile.role,
+      location: updatedProfile.location,
+      profilePhoto: updatedProfile.profilePhoto,
+      interests: updatedProfile.interests,
+      tags: updatedProfile.tags,
+      bio: updatedProfile.bio
+    };
+
+    res.status(200).json({ 
+      message: "Profile updated", 
+      data: cleanProfile
+    });
   } catch (error) {
     console.error("Error updating profile:", error);
     res.status(500).json({ message: "Error updating profile" });

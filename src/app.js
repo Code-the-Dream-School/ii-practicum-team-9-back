@@ -10,6 +10,7 @@ const {createServer} =require('node:http');
 const {Server} = require("socket.io");
 const  Message = require("./models/Message");
 const {Redis} = require("@upstash/redis");
+const path = require("path");
 
 const socket = createServer(app);
 const io = new Server(socket, {
@@ -30,15 +31,18 @@ const authRouter = require("./routes/authenticate");
 const resetPasswordRouter = require("./routes/resetPassword");
 const barterRouter = require("./routes/barter");
 const itemRoutes = require("./routes/itemRoutes.js");
+const adminRoutes = require("./routes/adminRoutes");
+ 
 const likeRouter = require("./routes/like");
 const messagesRouter = require("./routes/messages");
 
 const errorHandlerMiddleware = require("./middleware/error-handler");
-
+ 
 app.use(cors());
 app.use(express.json());
+const publicFolder = process.env.NODE_ENV === "production"?"dist":"public";
 
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname,publicFolder)));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(logger("dev"));
@@ -47,9 +51,12 @@ app.use(favicon(__dirname + "/public/favicon.ico"));
 app.use("/api/v1", mainRouter);
 app.use("/auth", authRouter);
 app.use("/reset", resetPasswordRouter);
-app.use("/api/profile", userRoutes);
+app.use('/api/users', userRoutes);
 app.use("/api/items", authenticateUser, itemRoutes);
-app.use("/api/profile", profilePhotoRoutes);
+app.use("/api/admin", authenticateUser, adminRoutes);
+app.use('/api/profile', profilePhotoRoutes);
+
+ 
 app.use("/api/v1/barter", authenticateUser, barterRouter);
 app.use("/api/v1/like", authenticateUser, likeRouter);
 app.use("/api/v1/messages", authenticateUser, messagesRouter);
@@ -102,5 +109,5 @@ io.on("connection", (socket) => {
   });
 });
 
-module.exports = socket;
+module.exports = { app, socket };
 //module.exports = app;
