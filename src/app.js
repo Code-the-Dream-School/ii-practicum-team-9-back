@@ -65,7 +65,7 @@ app.use(errorHandlerMiddleware);
 io.on("connection", (socket) => {
   socket.on("disconnect", async () => {
     try{
-      const userId = await redis.get(`user:${socket.id}`); 
+      const userId = await redis.get(`socket:${socket.id}`); 
       if (userId){
         await redis.del(`user:${userId}`);
         await redis.del(`socket:${socket.id}`);
@@ -93,9 +93,9 @@ io.on("connection", (socket) => {
       const receiverSocketId = await redis.get(`user:${message_to}`);
 
       if (receiverSocketId && io.sockets.sockets.get(receiverSocketId)) {
-        const messagenNew = new Message({ message_from, message_to, message });
-        await messagenNew.save();
-        io.to(receiverSocketId).emit("private-message", messagenNew);
+        const messageNew = new Message({ message_from, message_to, message });
+        await messageNew.save();
+        io.to(receiverSocketId).emit("private-message", messageNew);
         console.log("Message sent to", receiverSocketId);
       }
       else{
