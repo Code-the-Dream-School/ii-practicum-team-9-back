@@ -260,9 +260,9 @@ const deleteAllItems = async (req, res) => {
 module.exports = {
   addItem,
   getItems,
+  getAllItemsAdmin,
   updateItem,
   deleteItem,
   getUserItems,
   deleteAllItems,
-  getAllItemsAdmin,
 };
