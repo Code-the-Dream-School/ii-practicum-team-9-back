@@ -80,11 +80,29 @@ const getItems = async (req, res) => {
         }
       : {};
 
-    const items = await Item.find(filter).populate("owner", "name email");
+    const items = await Item.find(filter).populate("owner", "name email").lean();
+
+    // Get all user profiles (to find profile photos)
+    const userProfiles = await UserProfile.find().lean();
+
+    // Create a map: userId -> profilePhoto
+    const profileMap = {};
+    userProfiles.forEach(profile => {
+      if (profile.user) {
+        profileMap[profile.user.toString()] = profile.profilePhoto;
+      }
+    });
+
+
+    // Attach userPhoto to each item
+    const itemsWithPhotos = items.map(item => ({
+      ...item,
+      userPhoto: profileMap[item.owner._id.toString()] || "/default-avatar.png"
+    }));
 
     res.status(StatusCodes.OK).json(
       createResponse("success", "Items found", {
-        items: items,
+        items: itemsWithPhotos,
       })
     );
   } catch (error) {
