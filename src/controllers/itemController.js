@@ -264,4 +264,5 @@ module.exports = {
   deleteItem,
   getUserItems,
   deleteAllItems,
+  getAllItemsAdmin,
 };
