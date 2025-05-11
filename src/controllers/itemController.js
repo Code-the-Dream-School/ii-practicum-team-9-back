@@ -11,22 +11,19 @@ const createResponse = (status, message, data = []) => ({
 
 const addItem = async (req, res) => {
   try {
-    
-
     const { title, description, category } = req.body;
 
     if (!req.file) {
       return res
         .status(400)
-        .json({ status: 'error', message: 'Image file is required' });
+        .json({ status: "error", message: "Image file is required" });
     }
 
     if (!req.user || !req.user._id) {
-      return res
-        .status(StatusCodes.UNAUTHORIZED);
+      return res.status(StatusCodes.UNAUTHORIZED);
     }
 
-    const imageUrl = req.file.path;   
+    const imageUrl = req.file.path;
 
     const user = await User.findById(req.user._id);
     if (!user) {
@@ -45,11 +42,11 @@ const addItem = async (req, res) => {
     const newItem = new Item({
       title,
       description,
-      imageUrl,   
+      imageUrl,
       category,
       owner: user._id,
       userName: userProfile.name || user.name,
-      userPhoto: userProfile.profilePhoto || '',
+      userPhoto: userProfile.profilePhoto || "",
     });
 
     await newItem.save();
@@ -60,7 +57,7 @@ const addItem = async (req, res) => {
       })
     );
   } catch (error) {
-    console.error('Error adding item:', error);
+    console.error("Error adding item:", error);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json(createResponse("error", error.message));
@@ -115,10 +112,12 @@ const getItems = async (req, res) => {
 
 const getUserItems = async (req, res) => {
   try {
-    const userId = req.user.userId;   
-    console.log('User ID:', req.user.userId);
+    const userId = req.user._id;
 
-    const items = await Item.find({ owner: userId }).populate("owner", "name email");
+    const items = await Item.find({ owner: userId }).populate(
+      "owner",
+      "name email"
+    );
 
     res.status(StatusCodes.OK).json(
       createResponse("success", "User's items found", {
@@ -133,12 +132,30 @@ const getUserItems = async (req, res) => {
   }
 };
 
+const getAllItemsAdmin = async (req, res) => {
+  try {
+    const items = await Item.find().populate("owner", "name email");
+
+    res.status(StatusCodes.OK).json(
+      createResponse("success", "Items found for admin", {
+        items: items,
+      })
+    );
+  } catch (error) {
+    console.error("Error fetching items for admin:", error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json(createResponse("error", error.message));
+  }
+};
+
 const updateItem = async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, category } = req.body;
 
     const item = await Item.findOne({ _id: id });
+    const userProfile = await UserProfile.findOne({ user: req.user._id });
 
     if (!item) {
       return res
@@ -148,7 +165,7 @@ const updateItem = async (req, res) => {
 
     if (
       item.owner.toString() !== req.user._id.toString() &&
-      req.user.role !== "admin"
+      userProfile.role !== "admin"
     ) {
       return res
         .status(StatusCodes.UNAUTHORIZED)
@@ -160,7 +177,7 @@ const updateItem = async (req, res) => {
     const updateFields = {
       title,
       description,
-      category
+      category,
     };
 
     // If a new image was uploaded, update the imageUrl
@@ -174,14 +191,11 @@ const updateItem = async (req, res) => {
       { new: true, runValidators: true }
     ).populate("owner", "name email");
 
-    // Get the user profile to include user information
-    const userProfile = await UserProfile.findOne({ user: req.user._id });
-
     // Create a complete response object
     const responseItem = {
       ...updatedItem.toObject(),
       userName: userProfile?.name || updatedItem.userName,
-      userPhoto: userProfile?.profilePhoto || updatedItem.userPhoto
+      userPhoto: userProfile?.profilePhoto || updatedItem.userPhoto,
     };
 
     res.status(StatusCodes.OK).json(
@@ -200,23 +214,24 @@ const updateItem = async (req, res) => {
 const deleteItem = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log('Deleting item with ID:', id);  
-     
+
     const item = await Item.findOne({ _id: id });
+    const userProfile = await UserProfile.findOne({ user: req.user._id });
 
     if (!item) {
-      console.error(`Item with ID ${id} not found`);   
+      console.error(`Item with ID ${id} not found`);
       return res
         .status(StatusCodes.NOT_FOUND)
         .json(createResponse("error", "Item not found"));
     }
 
-     
     if (
       item.owner.toString() !== req.user._id.toString() &&
-      req.user.role !== "admin"
+      userProfile.role !== "admin"
     ) {
-      console.error(`User ${req.user.userId} is not authorized to delete this item`);  // Log unauthorized deletion attempt
+      console.error(
+        `User ${req.user.userId} is not authorized to delete this item`
+      ); // Log unauthorized deletion attempt
       return res
         .status(StatusCodes.UNAUTHORIZED)
         .json(
@@ -224,18 +239,15 @@ const deleteItem = async (req, res) => {
         );
     }
 
-  
     await Item.deleteOne({ _id: item._id });
-    console.log(`Item with ID ${id} deleted successfully`);  
 
-    
     res.status(StatusCodes.OK).json(
       createResponse("success", "Item deleted successfully", {
         item: item,
       })
     );
   } catch (error) {
-    console.error('Error in deleteItem function:', error.message);   
+    console.error("Error in deleteItem function:", error.message);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json(createResponse("error", error.message));
@@ -246,17 +258,29 @@ const deleteAllItems = async (req, res) => {
   try {
     // Delete only the user's items
     const result = await Item.deleteMany({ owner: req.user._id });
-     
 
-    res.status(StatusCodes.OK).json(
-      createResponse("success", `Successfully deleted ${result.deletedCount} items`)
-    );
+    res
+      .status(StatusCodes.OK)
+      .json(
+        createResponse(
+          "success",
+          `Successfully deleted ${result.deletedCount} items`
+        )
+      );
   } catch (error) {
-    console.error('Error deleting items:', error);
+    console.error("Error deleting items:", error);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json(createResponse("error", error.message));
   }
 };
 
-module.exports = { addItem, getItems, updateItem, deleteItem, getUserItems, deleteAllItems };
+module.exports = {
+  addItem,
+  getItems,
+  getAllItemsAdmin,
+  updateItem,
+  deleteItem,
+  getUserItems,
+  deleteAllItems,
+};
