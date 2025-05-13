@@ -1,4 +1,5 @@
 const UserProfile = require("../models/UserProfile");
+const Item = require("../models/item");
 
 const uploadProfilePhoto = async (req, res) => {
   try {
@@ -16,6 +17,12 @@ const uploadProfilePhoto = async (req, res) => {
       { $set: { profilePhoto: photoUrl } },
       { new: true }
     ).populate("user", "name email");
+
+    // Update all items owned by this user with the new photo
+    await Item.updateMany(
+      { owner: userId },
+      { $set: { userPhoto: photoUrl } }
+    );
 
     const cleanProfile = {
       _id: updatedProfile._id,

@@ -45,8 +45,8 @@ const addItem = async (req, res) => {
       imageUrl,
       category,
       owner: user._id,
-      userName: userProfile.name || user.name,
-      userPhoto: userProfile.profilePhoto || "",
+      userName: user.name,
+      userPhoto: userProfile.profilePhoto || "/default-avatar.png",
     });
 
     await newItem.save();
@@ -77,11 +77,37 @@ const getItems = async (req, res) => {
         }
       : {};
 
-    const items = await Item.find(filter).populate("owner", "name email");
+    const items = await Item.find(filter).populate("owner", "name email").lean();
+
+    // Get all user profiles (to find profile photos)
+    const userProfiles = await UserProfile.find().lean();
+
+    // Create a map: userId -> profilePhoto
+    const profileMap = {};
+    userProfiles.forEach(profile => {
+      if (profile.user) {
+        profileMap[profile.user.toString()] = profile.profilePhoto;
+      }
+    });
+
+    // Attach userPhoto to each item and update the item in the database
+    const itemsWithPhotos = await Promise.all(items.map(async item => {
+      const updatedPhoto = profileMap[item.owner._id.toString()] || "/default-avatar.png";
+      
+      // Update the item in the database if the photo has changed
+      if (item.userPhoto !== updatedPhoto) {
+        await Item.findByIdAndUpdate(item._id, { userPhoto: updatedPhoto });
+      }
+      
+      return {
+        ...item,
+        userPhoto: updatedPhoto
+      };
+    }));
 
     res.status(StatusCodes.OK).json(
       createResponse("success", "Items found", {
-        items: items,
+        items: itemsWithPhotos,
       })
     );
   } catch (error) {
@@ -173,11 +199,14 @@ const updateItem = async (req, res) => {
       { new: true, runValidators: true }
     ).populate("owner", "name email");
 
+    // Get the latest user profile for the owner
+    const ownerProfile = await UserProfile.findOne({ user: updatedItem.owner._id });
+
     // Create a complete response object
     const responseItem = {
       ...updatedItem.toObject(),
-      userName: userProfile?.name || updatedItem.userName,
-      userPhoto: userProfile?.profilePhoto || updatedItem.userPhoto,
+      userName: updatedItem.owner.name,
+      userPhoto: ownerProfile?.profilePhoto || "/default-avatar.png",
     };
 
     res.status(StatusCodes.OK).json(
